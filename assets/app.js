@@ -497,7 +497,12 @@ function toStringArray(value) {
 }
 
 function estimateTokens(text) {
-  return Math.ceil(String(text || "").length / 3.2);
+  const str = String(text || "");
+  let tokens = 0;
+  for (const char of str) {
+    tokens += char.charCodeAt(0) > 0x2e80 ? 1.5 : 0.25;
+  }
+  return Math.ceil(tokens);
 }
 
 function validate() {
@@ -524,7 +529,7 @@ function validate() {
     if (!entry.content) warnings.push(`世界書 #${index} 內容是空白。`);
     if (!entry.constant && !toStringArray(entry.keys).length) warnings.push(`世界書 #${index} 不是常駐，但沒有關鍵字。`);
     const entryTokens = estimateTokens(entry.content);
-    if (entryTokens > 500) warnings.push(`世界書 #${index}「${entry.comment || ""}」約 ${entryTokens} 符元，建議拆分（200-500 為佳）。`);
+    if (entryTokens > 500) warnings.push(`世界書 #${index}「${entry.comment || ""}」約 ${entryTokens} tokens，建議拆分（200-500 為佳）。`);
     if (!entry.constant && toStringArray(entry.keys).length > 0 && toStringArray(entry.keys).length < 3) warnings.push(`世界書 #${index} 關鍵字只有 ${toStringArray(entry.keys).length} 個，建議至少 3 個。`);
     if (entry.position === "at_depth" && entry.extensions?.depth > 1) warnings.push(`世界書 #${index} 使用深度 ${entry.extensions.depth}，深度 2 以上會打斷上下文。`);
   });
