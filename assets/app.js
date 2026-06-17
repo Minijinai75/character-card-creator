@@ -461,7 +461,7 @@ function normalizeEntry(entry, index) {
   next.id = Number.isFinite(Number(next.id)) ? Number(next.id) : index;
   next.keys = toStringArray(next.keys);
   next.secondary_keys = toStringArray(next.secondary_keys);
-  next.comment = String(next.comment ?? `Entry ${index + 1}`);
+  next.comment = String(next.comment ?? `條目 ${index + 1}`);
   next.content = String(next.content ?? "");
   next.constant = Boolean(next.constant);
   next.selective = next.selective !== false;
