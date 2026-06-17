@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#edf6f4">
+  <title>酒館角色卡製卡工坊</title>
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#guide" aria-label="酒館角色卡製卡工坊 BY MINI">
+        <span class="brand-mark"><img src="lab icon.png" alt=""></span>
+        <span>
+          <strong>酒館角色卡製卡工坊 BY MINI</strong>
+          <small>本機製作、檢查、合併與匯出</small>
+        </span>
+      </a>
+
+      <nav class="step-nav" aria-label="製卡流程">
+        <button class="step-link active" data-step="guide" type="button">
+          <span>01</span>
+          使用說明
+        </button>
+        <button class="step-link" data-step="character" type="button">
+          <span>02</span>
+          角色卡
+        </button>
+        <button class="step-link" data-step="worldbook" type="button">
+          <span>03</span>
+          世界書
+        </button>
+        <button class="step-link" data-step="merge" type="button">
+          <span>04</span>
+          合併
+        </button>
+        <button class="step-link" data-step="export" type="button">
+          <span>05</span>
+          匯出
+        </button>
+      </nav>
+
+      <div class="privacy-note">
+        <strong>本機處理</strong>
+        <p>JSON 與 PNG 都只在你的瀏覽器內解析，不會上傳到任何伺服器。</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">SillyTavern Character Card Forge</p>
+          <h1 id="viewTitle">使用說明</h1>
+        </div>
+        <div class="top-actions">
+          <button id="loadCharacterTemplate" class="button ghost" type="button">角色模板</button>
+          <button id="loadWorldTemplate" class="button ghost" type="button">世界書模板</button>
+          <button id="loadCombinedTemplate" class="button primary" type="button">合併模板</button>
+        </div>
+      </header>
+
+      <section id="message" class="message" aria-live="polite"></section>
+
+      <section class="layout-grid">
+        <div id="mainPanel" class="main-panel"></div>
+        <aside class="inspector">
+          <div class="inspector-card">
+            <div class="inspector-head">
+              <h2>檢查狀態</h2>
+              <span id="statusPill" class="status-pill muted">待載入</span>
+            </div>
+            <div id="stats" class="stats"></div>
+            <div id="warnings" class="warning-list"></div>
+          </div>
+
+          <div class="inspector-card">
+            <h2>下一步</h2>
+            <p id="nextStep" class="next-step">先閱讀流程，或直接載入角色卡模板開始。</p>
+          </div>
+        </aside>
+      </section>
+
+      <footer class="site-footer">
+        <p>酒館角色卡製卡工坊 BY MINI</p>
+        <div class="footer-credit" aria-label="版權與說明">
+          <p>Original toolbox credit: Made with care by Minijinai75</p>
+          <p>© 2026 SillyTavern 酒館角色卡快速製作工作坊</p>
+          <p>本工具非官方工具。</p>
+          <p>僅協助玩家預覽、編輯與安全製作成 SillyTavern 角色卡。</p>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <template id="fileControlsTemplate">
+    <input id="cardFileInput" class="hidden-input" type="file" accept=".json,.png,application/json,image/png">
+    <input id="worldFileInput" class="hidden-input" type="file" accept=".json,application/json">
+    <input id="exportImageInput" class="hidden-input" type="file" accept="image/png,image/jpeg,image/webp,image/*">
+  </template>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

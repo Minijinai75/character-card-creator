@@ -1,0 +1,30 @@
+{
+  "name": "未命名世界書",
+  "entries": [
+    {
+      "id": 0,
+      "keys": [
+        "關鍵詞"
+      ],
+      "secondary_keys": [],
+      "comment": "範例條目",
+      "content": "在這裡寫入世界觀、地點、關係、規則或設定。",
+      "constant": false,
+      "selective": true,
+      "enabled": true,
+      "position": "before_char",
+      "insertion_order": 90,
+      "use_regex": false,
+      "extensions": {
+        "position": 0,
+        "depth": 4,
+        "probability": 100,
+        "useProbability": true,
+        "role": 0,
+        "sticky": 0,
+        "cooldown": 0,
+        "display_index": 0
+      }
+    }
+  ]
+}
