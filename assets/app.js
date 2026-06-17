@@ -564,6 +564,53 @@ function updateInspector() {
     ? warnings.map((warning) => `<div class="warning">${escapeHtml(warning)}</div>`).join("")
     : `<div class="warning info">${state.card ? "目前沒有明顯格式警告。" : "請先載入或建立角色卡。"}</div>`;
   $("#nextStep").textContent = nextSteps[state.step];
+  scheduleSave();
+}
+
+const STORAGE_KEY = "cc-creator-autosave";
+let saveTimer = null;
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToStorage, 800);
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      card: state.card,
+      worldbook: state.worldbook,
+      workflow: state.workflow,
+      step: state.step,
+      cardFileName: state.cardFileName,
+      worldFileName: state.worldFileName,
+      mergeStrategy: state.mergeStrategy,
+      exportImageName: state.exportImageName,
+      altGreetingDraftCount: state.altGreetingDraftCount,
+      ts: Date.now()
+    }));
+  } catch {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const save = JSON.parse(raw);
+    if (!save.card && !save.worldbook) return false;
+    if (save.card) state.card = normalizeCard(save.card);
+    if (save.worldbook) state.worldbook = normalizeWorldBook(save.worldbook);
+    state.workflow = save.workflow || "";
+    state.step = save.step || "guide";
+    state.cardFileName = save.cardFileName || "";
+    state.worldFileName = save.worldFileName || "";
+    state.mergeStrategy = save.mergeStrategy || "replace";
+    state.exportImageName = save.exportImageName || "";
+    state.altGreetingDraftCount = save.altGreetingDraftCount || 0;
+    state.sourcePngBytes = null;
+    state.sourcePngUrl = "";
+    return true;
+  } catch { return false; }
 }
 
 function workflowLabel() {
@@ -586,6 +633,7 @@ function render() {
   panel.innerHTML = views[state.step]();
   bindViewEvents();
   updateInspector();
+  scheduleSave();
 }
 
 function renderGuide() {
@@ -1693,7 +1741,16 @@ function init() {
     handleExportImageFile(event.target.files[0]);
     event.target.value = "";
   });
+  if (loadFromStorage()) {
+    setMessage("已自動恢復上次的編輯內容。封面圖片需要重新上傳。");
+  }
   render();
+  window.addEventListener("beforeunload", (e) => {
+    if (state.card || state.worldbook) {
+      saveToStorage();
+      e.preventDefault();
+    }
+  });
   $(".inspector-head")?.addEventListener("click", () => {
     if (!window.matchMedia("(max-width: 768px)").matches) return;
     $(".inspector")?.classList.toggle("collapsed");
