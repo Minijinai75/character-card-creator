@@ -1,8 +1,8 @@
 ﻿# 酒館角色卡製卡工坊
 
-本次更新時間：26/06/18 01:48
+協助沒有 IDE 的創作者製作 SillyTavern 角色卡與世界書的靜態前端工具。
 
-協助沒有 IDE 的創作者製作 SillyTavern 角色卡與世界書的靜態前端工具。瀏覽器本機處理，不上傳任何資料。
+所有檔案都只在瀏覽器本機處理，不會上傳到任何伺服器。
 
 ## 功能
 
@@ -31,6 +31,10 @@
 - **U 形注意力分佈**：世界書擺放策略
 - **常駐/觸發策略**：constant 上限、keys 最低數量
 
+## 使用方式
+
+直接用瀏覽器開啟 `index.html` 即可，不需要安裝任何東西。
+
 ## 檔案結構
 
 ```
@@ -38,23 +42,7 @@ index.html          主頁面
 assets/app.css      樣式
 assets/app.js       全部邏輯
 templates/          三個空白模板（角色卡、世界書、合併）
-verification/       smoke test 截圖
 ```
-
-## Continuity
-
-| 檔案 | 用途 |
-|------|------|
-| `PROJECT_STATUS.md` | 目前狀態 |
-| `TASK_LOG.md` | 任務紀錄 |
-| `DECISIONS.md` | 決策紀錄 |
-| `VERIFY.md` | 驗證紀錄 |
-| `PLAN.md` | 產品規劃 |
-| `AGENTS.md` | 工作規則 |
-
-## 限制
-
-此專案位於 Google Drive 同步資料夾。若需 install/build/test，先複製到 `C:\Users\Miyabi\dev\...`。
 
 
 
