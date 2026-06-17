@@ -686,22 +686,25 @@ function renderCharacter() {
             <div class="badge-list">
               <span class="badge">${escapeHtml(state.card?.spec || "unknown")}</span>
               <span class="badge">${escapeHtml(state.card?.spec_version || "-")}</span>
-              <span class="badge">${getCardEntries().length} entries</span>
+              <span class="badge">${getCardEntries().length} 條目</span>
             </div>
           </div>
         </div>
-        <div class="section-grid">
-          <section class="panel">
-            <h3>主欄位</h3>
-            ${renderCharacterFields(data)}
-          </section>
-          <section class="panel">
-            <h3>角色卡 AI Skill</h3>
+        <section class="panel">
+          <h3>主欄位</h3>
+          ${renderCharacterFields(data)}
+        </section>
+        <div class="skill-section">
+          <button class="skill-toggle" type="button">
+            <span>角色卡 AI Skill</span>
+            <span class="skill-arrow">▶</span>
+          </button>
+          <div class="skill-content panel">
             <p>${state.workflow === "repair" ? "可把匯出的角色卡 JSON 貼給 AI，請它檢查一致性或修復格式，再貼回網站。" : "可把你的素材貼在 prompt 後面，讓 AI 依格式產出 JSON，再回網站檢查。"}</p>
             <div class="prompt-row">
               ${renderPromptButtons(characterPrompts)}
             </div>
-          </section>
+          </div>
         </div>
       ` : `
         <div class="dropzone" data-drop-card>
@@ -789,7 +792,7 @@ function renderWorldbook() {
           <button class="button" data-template="worldbook" type="button">載入空白模板</button>
         </div>
       </div>
-      <div class="section-grid">
+      <div class="section-grid" style="grid-template-columns:1fr">
         <section class="panel">
           <h3>世界書資料</h3>
           ${book ? `
@@ -804,13 +807,18 @@ function renderWorldbook() {
             <div class="entry-list">${entries.length ? entries.map(renderEntry).join("") : `<div class="empty">目前沒有條目。</div>`}</div>
           ` : `<div class="empty">尚未載入世界書。你可以載入空白模板或上傳 JSON。</div>`}
         </section>
-        <section class="panel">
-          <h3>世界書 AI Skill</h3>
+      </div>
+      <div class="skill-section">
+        <button class="skill-toggle" type="button">
+          <span>世界書 AI Skill</span>
+          <span class="skill-arrow">▶</span>
+        </button>
+        <div class="skill-content panel">
           <p>世界書 prompt 已融合注意力分佈原則：重要內容吃兩端，中段放可退讓內容，不要迷信全部塞 D0。</p>
           <div class="prompt-row">
             ${renderPromptButtons(worldPrompts)}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   `;
@@ -1011,6 +1019,9 @@ function bindViewEvents() {
   $("[data-export-character-only]")?.addEventListener("click", exportCharacterOnlyJson);
   $("[data-export-world-only]")?.addEventListener("click", exportWorldOnlyJson);
   $("[data-copy-json]")?.addEventListener("click", copyJson);
+  $$(".skill-toggle").forEach((btn) => btn.addEventListener("click", () => {
+    btn.closest(".skill-section").classList.toggle("expanded");
+  }));
   bindDropzones();
   if (window.matchMedia("(max-width: 768px)").matches) {
     $$(".entry-item").forEach((item) => {
