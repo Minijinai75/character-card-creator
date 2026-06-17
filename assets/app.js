@@ -246,7 +246,7 @@ const characterPrompts = [
 const worldPrompts = [
   {
     title: "素材轉世界書 JSON",
-    desc: "把世界觀素材整理成世界書 entries。",
+    desc: "把世界觀素材整理成世界書條目。",
     prompt: `你是 SillyTavern 世界書製作助手。請把我提供的世界觀素材整理成世界書 JSON。
 
 要求：
@@ -267,7 +267,7 @@ const worldPrompts = [
 8. insertion_order 不要全部卡在 100 附近，請用明顯區段保留排序空間。`
   },
   {
-    title: "世界觀筆記拆 entries",
+    title: "世界觀筆記拆條目",
     desc: "把長篇設定拆成多條可觸發世界書。",
     prompt: `請把我提供的長篇世界觀筆記拆成 SillyTavern 世界書 entries。
 
@@ -294,7 +294,7 @@ const worldPrompts = [
   },
   {
     title: "依注意力分佈重排世界書",
-    desc: "依 U 形注意力原則，重排 entries 的位置與順序。",
+    desc: "依 U 形注意力原則，重排條目的位置與順序。",
     prompt: `請檢查我提供的 SillyTavern 世界書 JSON，依「長上下文注意力常呈 U 形分佈」的原則，提出重排建議或輸出重排後 JSON。
 
 重排原則：
@@ -312,7 +312,7 @@ const worldPrompts = [
 如果你輸出 JSON，請只輸出合法 JSON，不要 Markdown code fence。`
   },
   {
-    title: "檢查 entries 品質",
+    title: "檢查條目品質",
     desc: "檢查世界書條目是否太長、太碎、key 不足。",
     prompt: `請檢查我提供的 SillyTavern 世界書 entries。
 
@@ -325,7 +325,7 @@ const worldPrompts = [
   },
   {
     title: "條目配置推薦",
-    desc: "依條目類型推薦 position、order、constant、depth 的最佳配置。",
+    desc: "依條目類型推薦位置、順序、狀態、深度的最佳配置。",
     prompt: `你是 SillyTavern 世界書配置助手。請讀取我提供的世界書 JSON，依最佳實踐推薦每個條目的配置。
 
 推薦配置參考：
@@ -507,25 +507,26 @@ function validate() {
     return state.warnings;
   }
   const data = getData();
-  if (state.card.spec !== "chara_card_v3") warnings.push("角色卡 spec 不是 chara_card_v3。");
-  if (String(state.card.spec_version) !== "3.0") warnings.push("角色卡 spec_version 不是 3.0。");
+  const fieldNames = { name: "角色名稱", description: "角色描述", personality: "個性摘要", scenario: "場景設想", first_mes: "首則訊息", mes_example: "對話範例" };
+  if (state.card.spec !== "chara_card_v3") warnings.push("角色卡規格不是 chara_card_v3。");
+  if (String(state.card.spec_version) !== "3.0") warnings.push("角色卡版本不是 3.0。");
   ["name", "description", "personality", "scenario", "first_mes", "mes_example"].forEach((key) => {
-    if ((state.card[key] ?? "") !== (data[key] ?? "")) warnings.push(`頂層 ${key} 與 data.${key} 不一致。`);
+    if ((state.card[key] ?? "") !== (data[key] ?? "")) warnings.push(`頂層「${fieldNames[key]}」與內層不一致。`);
   });
   if (!data.name) warnings.push("角色名稱是空白。");
-  if (!data.description) warnings.push("description 是空白，角色可能缺少核心設定。");
-  if (!data.first_mes) warnings.push("first_mes 是空白，匯入後可能沒有開場白。");
-  if (!Array.isArray(data.alternate_greetings)) warnings.push("alternate_greetings 不是陣列。");
+  if (!data.description) warnings.push("角色描述是空白，角色可能缺少核心設定。");
+  if (!data.first_mes) warnings.push("首則訊息是空白，匯入後可能沒有開場白。");
+  if (!Array.isArray(data.alternate_greetings)) warnings.push("額外問候語格式不正確。");
   const entries = getCardEntries();
   const constantCount = entries.filter((e) => e.constant).length;
-  if (constantCount > 3) warnings.push(`${constantCount} 個世界書條目設為常駐（constant），建議控制在 3 個以內。`);
+  if (constantCount > 3) warnings.push(`${constantCount} 個世界書條目設為常駐，建議控制在 3 個以內。`);
   entries.forEach((entry, index) => {
-    if (!entry.content) warnings.push(`世界書 #${index} content 是空白。`);
-    if (!entry.constant && !toStringArray(entry.keys).length) warnings.push(`世界書 #${index} 不是 constant，但沒有 keys。`);
+    if (!entry.content) warnings.push(`世界書 #${index} 內容是空白。`);
+    if (!entry.constant && !toStringArray(entry.keys).length) warnings.push(`世界書 #${index} 不是常駐，但沒有關鍵字。`);
     const entryTokens = estimateTokens(entry.content);
-    if (entryTokens > 500) warnings.push(`世界書 #${index}「${entry.comment || ""}」約 ${entryTokens} tokens，建議拆分（200-500 為佳）。`);
-    if (!entry.constant && toStringArray(entry.keys).length > 0 && toStringArray(entry.keys).length < 3) warnings.push(`世界書 #${index} keys 只有 ${toStringArray(entry.keys).length} 個，建議至少 3 個（含暱稱、別名）。`);
-    if (entry.position === "at_depth" && entry.extensions?.depth > 1) warnings.push(`世界書 #${index} 使用 D${entry.extensions.depth}，D2 以上會打斷上下文，建議 D0 或 D1。`);
+    if (entryTokens > 500) warnings.push(`世界書 #${index}「${entry.comment || ""}」約 ${entryTokens} 符元，建議拆分（200-500 為佳）。`);
+    if (!entry.constant && toStringArray(entry.keys).length > 0 && toStringArray(entry.keys).length < 3) warnings.push(`世界書 #${index} 關鍵字只有 ${toStringArray(entry.keys).length} 個，建議至少 3 個。`);
+    if (entry.position === "at_depth" && entry.extensions?.depth > 1) warnings.push(`世界書 #${index} 使用深度 ${entry.extensions.depth}，深度 2 以上會打斷上下文。`);
   });
   state.warnings = warnings;
   return warnings;
@@ -624,18 +625,18 @@ function renderGuide() {
             <li><strong>角色前</strong>：世界觀、核心規則、不變設定。order 越小越重要。</li>
             <li><strong>角色後</strong>：NPC、場景、次要補充。</li>
             <li><strong>D0</strong>：只放最怕被忽略的行為指令和硬規則。D2 以上不要用。</li>
-            <li><strong>常駐不超過 3 條</strong>，其餘用 keys 觸發，每條至少 3 個 keys。</li>
+            <li><strong>常駐不超過 3 條</strong>，其餘用關鍵字觸發，每條至少 3 個關鍵字。</li>
           </ul>
         </section>
       </div>
       <div class="section-grid three">
         <section class="panel">
           <h3>角色卡</h3>
-          <p>全新製作會打開空白模板；修卡會匯入既有卡。角色卡 Skill 放在角色卡區塊。</p>
+          <p>全新製作會打開空白模板；修卡會匯入既有卡。</p>
         </section>
         <section class="panel">
           <h3>世界書</h3>
-          <p>全新製作會打開空白世界書；修卡可從既有卡拆出世界書。世界書 Skill 已加入注意力分佈原則。</p>
+          <p>全新製作會打開空白世界書；修卡可從既有卡拆出世界書。</p>
         </section>
         <section class="panel">
           <h3>合併匯出</h3>
@@ -770,9 +771,11 @@ function field(key, label, value, type = "textarea", mode = "mirror", help = "")
 function renderPromptButtons(prompts) {
   return prompts.map((item, index) => `
     <div class="prompt-card">
-      <strong>${escapeHtml(item.title)}</strong>
-      <p>${escapeHtml(item.desc)}</p>
-      <button class="button" data-copy-prompt="${index}" type="button">複製 prompt</button>
+      <div class="prompt-info">
+        <strong>${escapeHtml(item.title)}</strong>
+        <small>${escapeHtml(item.desc)}</small>
+      </div>
+      <button class="button" data-copy-prompt="${index}" type="button">複製</button>
     </div>
   `).join("");
 }
@@ -970,7 +973,7 @@ function renderExport() {
         </div>
         <section class="panel">
           <h3>修卡用拆分</h3>
-          <p>拆出不含世界書的角色主體或世界書 entries，交給 AI 修完再回來合併。</p>
+          <p>拆出不含世界書的角色主體或世界書條目，交給 AI 修完再回來合併。</p>
           <div class="export-actions">
             <button class="button" data-export-character-only type="button">拆出角色卡 JSON</button>
             <button class="button" data-export-world-only type="button">拆出世界書 JSON</button>
@@ -1287,12 +1290,24 @@ function reindexEntries(entries) {
 function copyPrompt(index) {
   const prompts = state.step === "worldbook" ? worldPrompts : characterPrompts;
   copyText(prompts[index]?.prompt || "");
-  setMessage("已複製 AI Skill prompt。");
+  const btn = $$("[data-copy-prompt]")[index];
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = "已複製 ✓";
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+  }
 }
 
 function copyJson() {
   copyText(JSON.stringify(state.card, null, 2));
-  setMessage("已複製角色卡 JSON。");
+  const btn = $("[data-copy-json]");
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = "已複製 ✓";
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+  }
 }
 
 function exportImageNote() {
