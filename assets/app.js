@@ -788,7 +788,7 @@ function renderWorldbook() {
       <div class="view-head">
         <div>
           <h2>世界書</h2>
-          <p>${state.workflow === "repair" ? "修卡模式：可檢查既有 entries，也可拆出世界書 JSON 給 AI 依注意力分佈重排。" : "全新製作模式：從空白世界書開始，或複製 Skill 給 AI 產出 entries，再回來合併。"}</p>
+          <p>${state.workflow === "repair" ? "修卡模式：可檢查既有條目，也可拆出世界書給 AI 依注意力分佈重排。" : "全新製作模式：從空白世界書開始，或複製提示詞給 AI 產出條目，再回來合併。"}</p>
         </div>
         <div class="action-row">
           <button class="button primary" data-pick-world type="button">上傳世界書 JSON</button>
@@ -897,8 +897,8 @@ function renderMerge() {
           <div class="stats">
             <div class="stat"><strong>${escapeHtml(cardName)}</strong><span>角色卡</span></div>
             <div class="stat"><strong>${escapeHtml(bookName)}</strong><span>世界書</span></div>
-            <div class="stat"><strong>${book?.entries?.length || 0}</strong><span>待合併 entries</span></div>
-            <div class="stat"><strong>${getCardEntries().length}</strong><span>卡內 entries</span></div>
+            <div class="stat"><strong>${book?.entries?.length || 0}</strong><span>待合併條目</span></div>
+            <div class="stat"><strong>${getCardEntries().length}</strong><span>卡內條目</span></div>
           </div>
           <div class="action-row">
             <button class="button" data-pick-card type="button">上傳角色卡</button>
@@ -910,7 +910,7 @@ function renderMerge() {
           <h3>合併策略</h3>
           <div class="merge-options">
             ${mergeOption("replace", "取代", "用目前世界書取代角色卡內的 character_book。")}
-            ${mergeOption("append", "追加", "保留角色卡原本 entries，將目前世界書接到後面。")}
+            ${mergeOption("append", "追加", "保留角色卡原本條目，將目前世界書接到後面。")}
             ${mergeOption("dedupe", "去重追加", "依 comment 與 content 去重後追加，適合整理多次生成結果。")}
           </div>
           <div class="action-row">
@@ -1229,7 +1229,7 @@ async function handleWorldFile(file) {
 function addEntry() {
   const book = state.worldbook || getCharacterBook();
   if (!book) return;
-  book.entries.push(normalizeEntry({ comment: `Entry ${book.entries.length + 1}`, keys: [], content: "" }, book.entries.length));
+  book.entries.push(normalizeEntry({ comment: `條目 ${book.entries.length + 1}`, keys: [], content: "" }, book.entries.length));
   render();
 }
 
