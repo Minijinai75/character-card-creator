@@ -859,8 +859,8 @@ function renderEntry(entry, index) {
             <option value="disabled" ${status === "disabled" ? "selected" : ""}>❌ 停用</option>
           </select></div>
           <div class="field"><label>插入位置</label><select data-entry-field="position" data-entry-index="${index}">
-            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>↑角色定義之前</option>
-            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>↓角色定義之後</option>
+            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>↑角色前</option>
+            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>↓角色後</option>
             <option value="at_depth" ${posValue === "at_depth" ? "selected" : ""}>@深度</option>
           </select></div>
           <div class="field"><label>順序</label><input type="number" data-entry-field="insertion_order" data-entry-index="${index}" value="${escapeHtml(entry.insertion_order ?? 90)}"></div>
