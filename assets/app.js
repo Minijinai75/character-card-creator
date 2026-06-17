@@ -109,7 +109,7 @@ const stepTitles = {
 const nextSteps = {
   guide: "先選擇全新製作或修卡。全新製作會直接打開空白模板；修卡會引導匯入既有角色卡。",
   character: "全新製作可直接填寫或複製 AI Skill；修卡可手動調整，或到匯出區拆成 JSON 給 AI 協助。",
-  worldbook: "全新製作可直接填 entries 或複製世界書 Skill；修卡可檢查既有 entries 後再合併。",
+  worldbook: "全新製作可直接填條目或複製世界書 Skill；修卡可檢查既有條目後再合併。",
   merge: "合併完成後，到匯出區下載 JSON 或 PNG 角色卡。",
   export: "匯出前先看檢查狀態；若有警告，回到對應區塊修正。"
 };
@@ -541,7 +541,7 @@ function updateInspector() {
     <div class="stat"><strong>${escapeHtml(workflowLabel())}</strong><span>工作流</span></div>
     <div class="stat"><strong>${escapeHtml(cardName)}</strong><span>角色卡</span></div>
     <div class="stat"><strong>${escapeHtml(worldName)}</strong><span>世界書</span></div>
-    <div class="stat"><strong>${entries}</strong><span>entries</span></div>
+    <div class="stat"><strong>${entries}</strong><span>條目數</span></div>
   `;
   const pill = $("#statusPill");
   if (!state.card) {
@@ -798,10 +798,10 @@ function renderWorldbook() {
               <input data-world-name value="${escapeHtml(book.name || "")}">
             </div>
             <div class="action-row">
-              <button class="button" data-add-entry type="button">新增 entry</button>
+              <button class="button" data-add-entry type="button">新增條目</button>
               <button class="button warn" data-apply-world-to-card type="button" ${state.card ? "" : "disabled"}>套用到角色卡</button>
             </div>
-            <div class="entry-list">${entries.length ? entries.map(renderEntry).join("") : `<div class="empty">目前沒有 entries。</div>`}</div>
+            <div class="entry-list">${entries.length ? entries.map(renderEntry).join("") : `<div class="empty">目前沒有條目。</div>`}</div>
           ` : `<div class="empty">尚未載入世界書。你可以載入空白模板或上傳 JSON。</div>`}
         </section>
         <section class="panel">
@@ -823,48 +823,45 @@ function renderEntry(entry, index) {
   const posValue = entry.position || "before_char";
   const depthValue = entry.extensions?.depth ?? 4;
   const tokenHint = tokens > 500 ? "，建議拆分" : tokens > 0 && tokens < 50 ? "，內容偏少" : "";
+  const status = entry.enabled === false ? "disabled" : entry.constant ? "constant" : "normal";
+  const posLabel = posValue === "at_depth" ? `@D${depthValue}` : posValue === "after_char" ? "↓角色後" : "↑角色前";
+  const statusLabel = status === "constant" ? "🔵 常駐" : status === "disabled" ? "❌ 停用" : "🟢 一般";
   return `
     <article class="entry-item">
       <div class="entry-title">
         <div>
-          <strong>${escapeHtml(entry.comment || `Entry ${index + 1}`)}</strong>
-          <small>${escapeHtml(toStringArray(entry.keys).join(", ") || "無 keys")}</small>
+          <strong>${escapeHtml(entry.comment || `條目 ${index + 1}`)}</strong>
+          <small>${escapeHtml(toStringArray(entry.keys).join(", ") || "無關鍵字")}</small>
         </div>
         <div class="badge-list">
-          <span class="badge ${entry.constant ? "on" : ""}">${entry.constant ? "常駐" : "觸發"}</span>
-          <span class="badge ${entry.enabled === false ? "off" : "on"}">${entry.enabled === false ? "off" : "on"}</span>
-          <span class="badge">${escapeHtml(posValue === "at_depth" ? `D${depthValue}` : posValue)}</span>
+          <span class="badge ${status === "constant" ? "on" : status === "disabled" ? "off" : ""}">${statusLabel}</span>
+          <span class="badge">${escapeHtml(posLabel)}</span>
           <span class="badge">#${index}</span>
         </div>
       </div>
       <div class="entry-body">
-        <div class="form-grid">
-          <div class="field"><label>comment</label><input data-entry-field="comment" data-entry-index="${index}" value="${escapeHtml(entry.comment || "")}"></div>
-          <div class="field"><label>constant（常駐/觸發）</label><select data-entry-field="constant" data-entry-index="${index}">
-            <option value="true" ${entry.constant ? "selected" : ""}>true（常駐：永遠注入）</option>
-            <option value="false" ${!entry.constant ? "selected" : ""}>false（觸發：靠 keys）</option>
+        <div class="field"><label>條目標題</label><input data-entry-field="comment" data-entry-index="${index}" value="${escapeHtml(entry.comment || "")}"></div>
+        <div class="entry-config">
+          <div class="field"><label>狀態</label><select data-entry-field="status" data-entry-index="${index}">
+            <option value="constant" ${status === "constant" ? "selected" : ""}>🔵 常駐</option>
+            <option value="normal" ${status === "normal" ? "selected" : ""}>🟢 一般</option>
+            <option value="disabled" ${status === "disabled" ? "selected" : ""}>❌ 停用</option>
           </select></div>
-          <div class="field"><label>position</label><select data-entry-field="position" data-entry-index="${index}">
-            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>before_char（角色前）</option>
-            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>after_char（角色後）</option>
-            <option value="at_depth" ${posValue === "at_depth" ? "selected" : ""}>at_depth（深度插入）</option>
+          <div class="field"><label>插入位置</label><select data-entry-field="position" data-entry-index="${index}">
+            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>↑角色定義之前</option>
+            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>↓角色定義之後</option>
+            <option value="at_depth" ${posValue === "at_depth" ? "selected" : ""}>@深度</option>
           </select></div>
-          <div class="field"><label>enabled</label><select data-entry-field="enabled" data-entry-index="${index}">
-            <option value="true" ${entry.enabled !== false ? "selected" : ""}>true</option>
-            <option value="false" ${entry.enabled === false ? "selected" : ""}>false</option>
-          </select></div>
+          <div class="field"><label>順序</label><input type="number" data-entry-field="insertion_order" data-entry-index="${index}" value="${escapeHtml(entry.insertion_order ?? 90)}"></div>
+          <div class="field"><label>深度</label><input type="number" data-entry-field="depth" data-entry-index="${index}" value="${escapeHtml(depthValue)}" min="0" max="999"></div>
         </div>
         <div class="form-grid">
-          <div class="field"><label>depth（at_depth 時生效）</label><input type="number" data-entry-field="depth" data-entry-index="${index}" value="${escapeHtml(depthValue)}" min="0" max="999"></div>
-          <div class="field"><label>insertion_order</label><input type="number" data-entry-field="insertion_order" data-entry-index="${index}" value="${escapeHtml(entry.insertion_order ?? 90)}"></div>
+          <div class="field"><label>主要關鍵字（每行一個，建議 ≥ 3）</label><textarea data-entry-field="keys" data-entry-index="${index}">${escapeHtml(keys)}</textarea></div>
+          <div class="field"><label>選填過濾器（每行一個）</label><textarea data-entry-field="secondary_keys" data-entry-index="${index}">${escapeHtml(secondary)}</textarea></div>
         </div>
-        <div class="form-grid">
-          <div class="field"><label>keys，每行一個（建議 ≥ 3 個）</label><textarea data-entry-field="keys" data-entry-index="${index}">${escapeHtml(keys)}</textarea></div>
-          <div class="field"><label>secondary_keys，每行一個</label><textarea data-entry-field="secondary_keys" data-entry-index="${index}">${escapeHtml(secondary)}</textarea></div>
-        </div>
-        <div class="field"><label>content <span class="token-count">（約 ${tokens} tokens${tokenHint}）</span></label><textarea data-entry-field="content" data-entry-index="${index}">${escapeHtml(entry.content || "")}</textarea></div>
+        <div class="field"><label>內容 <span class="token-count">（約 ${tokens} tokens${tokenHint}）</span></label><textarea data-entry-field="content" data-entry-index="${index}">${escapeHtml(entry.content || "")}</textarea></div>
         <div class="action-row">
-          <button class="button danger" data-remove-entry="${index}" type="button">刪除 entry</button>
+          <button class="button danger" data-remove-entry="${index}" type="button">刪除條目</button>
         </div>
       </div>
     </article>
@@ -1092,6 +1089,13 @@ function handleEntryField(event) {
   const fieldName = event.target.dataset.entryField;
   let value = event.target.value;
   if (fieldName === "keys" || fieldName === "secondary_keys") value = toStringArray(value);
+  if (fieldName === "status") {
+    entry.constant = value === "constant";
+    entry.enabled = value !== "disabled";
+    updateInspector();
+    render();
+    return;
+  }
   if (fieldName === "enabled") value = value === "true";
   if (fieldName === "constant") value = value === "true";
   if (fieldName === "insertion_order") value = Number(value);
@@ -1573,7 +1577,7 @@ function createFallbackPng(card) {
     wrapCanvasText(ctx, card.data?.name || card.name || "未命名角色", 72, 150, 370, 52);
     ctx.fillStyle = "#6e7687";
     ctx.font = "24px Microsoft JhengHei, sans-serif";
-    wrapCanvasText(ctx, "SillyTavern Character Card Creator", 72, 620, 370, 34);
+    wrapCanvasText(ctx, "酒館角色卡製卡工坊", 72, 620, 370, 34);
     canvas.toBlob(async (blob) => {
       if (!blob) {
         reject(new Error("無法產生 PNG。"));

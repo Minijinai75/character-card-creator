@@ -574,6 +574,13 @@ pre {
   object-fit: cover;
 }
 
+.entry-config {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
 .entry-list {
   display: grid;
   gap: 10px;
@@ -594,9 +601,16 @@ pre {
   background: linear-gradient(90deg, rgba(239, 247, 248, 0.95), rgba(248, 245, 253, 0.95));
 }
 
-.entry-title strong,
+.entry-title strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
 .entry-title small {
   display: block;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 0.76rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1043,6 +1057,10 @@ pre {
 
   .stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .entry-config {
+    grid-template-columns: 1fr 1fr;
   }
 
   .entry-item.collapsed .entry-body {
