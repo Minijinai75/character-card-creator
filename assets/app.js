@@ -945,27 +945,32 @@ function renderExport() {
             <p>${escapeHtml(exportImageNote())}</p>
           </div>
         </div>
-        <div class="export-actions">
-          <button class="button primary export-btn" data-export-json type="button">下載 JSON</button>
-          <button class="button primary export-btn" data-export-png type="button">下載 PNG</button>
-        </div>
         <div class="section-grid">
           <section class="panel">
-            <h3>其他操作</h3>
-            <div class="action-row">
+            <h3>PNG 角色卡</h3>
+            <p>上傳封面圖片，再下載成可匯入 SillyTavern 的 PNG 角色卡。</p>
+            <div class="export-actions">
               <button class="button" data-pick-export-image type="button">上傳封面圖片</button>
+              <button class="button primary export-btn" data-export-png type="button">下載 PNG</button>
+            </div>
+          </section>
+          <section class="panel">
+            <h3>JSON 角色卡</h3>
+            <p>下載或複製完整角色卡 JSON（含世界書）。</p>
+            <div class="export-actions">
+              <button class="button primary export-btn" data-export-json type="button">下載 JSON</button>
               <button class="button" data-copy-json type="button">複製 JSON</button>
             </div>
           </section>
-          <section class="panel">
-            <h3>修卡用拆分</h3>
-            <p>拆出不含世界書的角色主體或世界書 entries，交給 AI 修完再回來合併。</p>
-            <div class="action-row">
-              <button class="button" data-export-character-only type="button">拆出角色卡 JSON</button>
-              <button class="button" data-export-world-only type="button">拆出世界書 JSON</button>
-            </div>
-          </section>
         </div>
+        <section class="panel">
+          <h3>修卡用拆分</h3>
+          <p>拆出不含世界書的角色主體或世界書 entries，交給 AI 修完再回來合併。</p>
+          <div class="export-actions">
+            <button class="button" data-export-character-only type="button">拆出角色卡 JSON</button>
+            <button class="button" data-export-world-only type="button">拆出世界書 JSON</button>
+          </div>
+        </section>
       ` : `
         <div class="empty">
           <strong>尚未載入角色卡</strong>

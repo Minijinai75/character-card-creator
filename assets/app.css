@@ -1113,7 +1113,11 @@ pre {
   }
 
   .export-actions {
-    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .export-btn {
+    min-height: 50px;
   }
 
   .site-footer {
