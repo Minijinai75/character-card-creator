@@ -924,46 +924,57 @@ function mergeOption(value, title, desc) {
 }
 
 function renderExport() {
+  const hasCard = !!state.card;
+  const cardName = hasCard ? escapeHtml(state.card.data?.name || state.card.name || "未命名角色") : "";
+  const avatar = state.sourcePngUrl
+    ? `<img src="${state.sourcePngUrl}" alt="封面預覽">`
+    : escapeHtml((cardName || "卡").slice(0, 1));
   return `
     <div class="view">
       <div class="view-head">
         <div>
           <h2>匯出</h2>
-          <p>匯出前請看右側檢查狀態。JSON 會保留未知欄位；PNG 會把角色卡 JSON 寫入 chara metadata。</p>
+          <p>匯出前請確認檢查狀態。JSON 保留所有欄位；PNG 把角色卡 JSON 寫入 chara metadata。</p>
         </div>
       </div>
-      <div class="section-grid">
-        <section class="panel">
-          <h3>匯出檔案</h3>
-          <div class="action-row">
-            <button class="button" data-pick-export-image type="button" ${state.card ? "" : "disabled"}>上傳封面圖片</button>
-            <button class="button primary" data-export-json type="button" ${state.card ? "" : "disabled"}>下載 JSON</button>
-            <button class="button primary" data-export-png type="button" ${state.card ? "" : "disabled"}>下載 PNG</button>
-            <button class="button" data-copy-json type="button" ${state.card ? "" : "disabled"}>複製 JSON</button>
+      ${hasCard ? `
+        <div class="card-summary">
+          <div class="avatar-preview">${avatar}</div>
+          <div>
+            <h3>${cardName}</h3>
+            <p>${escapeHtml(exportImageNote())}</p>
           </div>
-          <div class="action-row">
-            <button class="button" data-export-character-only type="button" ${state.card ? "" : "disabled"}>拆出角色卡 JSON</button>
-            <button class="button" data-export-world-only type="button" ${state.card || state.worldbook ? "" : "disabled"}>拆出世界書 JSON</button>
-          </div>
-          <p>${escapeHtml(exportImageNote())}</p>
-          ${state.sourcePngUrl ? `
-            <div class="card-summary">
-              <div class="avatar-preview"><img src="${state.sourcePngUrl}" alt="匯出封面預覽"></div>
-              <div>
-                <h3>${escapeHtml(state.exportImageName || state.cardFileName || "目前封面")}</h3>
-                <p>下載 PNG 時會把目前角色卡 JSON 寫入這張圖片的 chara metadata。</p>
-              </div>
+        </div>
+        <div class="export-actions">
+          <button class="button primary export-btn" data-export-json type="button">下載 JSON</button>
+          <button class="button primary export-btn" data-export-png type="button">下載 PNG</button>
+        </div>
+        <div class="section-grid">
+          <section class="panel">
+            <h3>其他操作</h3>
+            <div class="action-row">
+              <button class="button" data-pick-export-image type="button">上傳封面圖片</button>
+              <button class="button" data-copy-json type="button">複製 JSON</button>
             </div>
-          ` : ""}
-        </section>
-        <section class="panel">
-          <h3>JSON 預覽</h3>
-          ${state.card ? `<pre class="json-preview">${escapeHtml(JSON.stringify(state.card, null, 2))}</pre>` : `<div class="empty">尚未載入角色卡。</div>`}
-        </section>
-      </div>
+          </section>
+          <section class="panel">
+            <h3>修卡用拆分</h3>
+            <p>拆出不含世界書的角色主體或世界書 entries，交給 AI 修完再回來合併。</p>
+            <div class="action-row">
+              <button class="button" data-export-character-only type="button">拆出角色卡 JSON</button>
+              <button class="button" data-export-world-only type="button">拆出世界書 JSON</button>
+            </div>
+          </section>
+        </div>
+      ` : `
+        <div class="empty">
+          <strong>尚未載入角色卡</strong>
+          <p>請先到角色卡或合併區載入角色卡，再回來匯出。</p>
+        </div>
+      `}
       <section class="panel">
-        <h3>修卡用拆分</h3>
-        <p>如果想讓 AI 協助修卡，可以先用「拆出角色卡 JSON」取得不含世界書的角色主體，再用「拆出世界書 JSON」取得 entries。修完後回到角色卡 / 世界書區匯入，最後合併匯出。</p>
+        <h3>JSON 預覽</h3>
+        ${hasCard ? `<pre class="json-preview">${escapeHtml(JSON.stringify(state.card, null, 2))}</pre>` : `<div class="empty">載入角色卡後會顯示完整 JSON。</div>`}
       </section>
     </div>
   `;
@@ -1557,7 +1568,7 @@ function createFallbackPng(card) {
     wrapCanvasText(ctx, card.data?.name || card.name || "未命名角色", 72, 150, 370, 52);
     ctx.fillStyle = "#6e7687";
     ctx.font = "24px Microsoft JhengHei, sans-serif";
-    wrapCanvasText(ctx, "酒館角色卡製卡工坊", 72, 620, 370, 34);
+    wrapCanvasText(ctx, "SillyTavern Character Card Creator", 72, 620, 370, 34);
     canvas.toBlob(async (blob) => {
       if (!blob) {
         reject(new Error("無法產生 PNG。"));

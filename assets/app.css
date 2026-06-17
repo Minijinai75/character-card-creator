@@ -845,6 +845,19 @@ pre {
   line-height: 1.45;
 }
 
+.export-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.export-btn {
+  min-height: 54px;
+  font-size: 1.05rem;
+  border-radius: 10px;
+}
+
 @media (max-width: 1080px) {
   .app-shell {
     grid-template-columns: 1fr;
@@ -1097,6 +1110,10 @@ pre {
 
   .avatar-preview {
     width: 64px;
+  }
+
+  .export-actions {
+    grid-template-columns: 1fr;
   }
 
   .site-footer {
