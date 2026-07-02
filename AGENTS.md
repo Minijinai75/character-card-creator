@@ -32,7 +32,7 @@
 
 ## Documentation Rules
 
-- 更新任何專案文件前，先確認台灣時間，格式使用 `YY/MM/DD HH:MM`。
+- 更新任何專案文件前，先確認台灣時間，格式使用 `YY-MM-DD HH:MM`。
 - 每次工作結束前，視情況更新：
   - `PROJECT_STATUS.md`
   - `TASK_LOG.md`
