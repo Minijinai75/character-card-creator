@@ -542,7 +542,8 @@ function updateInspector() {
   const cardName = state.card?.data?.name || state.card?.name || "未載入";
   const worldName = state.worldbook?.name || state.card?.data?.character_book?.name || "未載入";
   const entries = state.worldbook?.entries?.length ?? getCardEntries().length;
-  const tokenCount = state.card ? estimateTokens(JSON.stringify(state.card)) : 0;
+  const cardJson = state.card ? JSON.stringify(state.card) : "";
+  const tokenCount = cardJson.length > 500000 ? Math.ceil(cardJson.length * 0.6) : estimateTokens(cardJson);
   $("#stats").innerHTML = `
     <div class="stat"><strong>${escapeHtml(workflowLabel())}</strong><span>工作流</span></div>
     <div class="stat"><strong>${escapeHtml(cardName)}</strong><span>角色卡</span></div>
@@ -596,9 +597,12 @@ function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
+    console.log("[DEBUG] loadFromStorage: raw length", raw.length);
     const save = JSON.parse(raw);
     if (!save.card && !save.worldbook) return false;
+    console.log("[DEBUG] loadFromStorage: normalizeCard...");
     if (save.card) state.card = normalizeCard(save.card);
+    console.log("[DEBUG] loadFromStorage: normalizeWorldBook...");
     if (save.worldbook) state.worldbook = normalizeWorldBook(save.worldbook);
     state.workflow = save.workflow || "";
     state.step = save.step || "guide";
@@ -620,20 +624,32 @@ function workflowLabel() {
 }
 
 function render() {
-  $("#viewTitle").textContent = stepTitles[state.step];
-  $$(".step-link").forEach((button) => button.classList.toggle("active", button.dataset.step === state.step));
-  const panel = $("#mainPanel");
-  const views = {
-    guide: renderGuide,
-    character: renderCharacter,
-    worldbook: renderWorldbook,
-    merge: renderMerge,
-    export: renderExport
-  };
-  panel.innerHTML = views[state.step]();
-  bindViewEvents();
-  updateInspector();
-  scheduleSave();
+  try {
+    $("#viewTitle").textContent = stepTitles[state.step];
+    $$(".step-link").forEach((button) => button.classList.toggle("active", button.dataset.step === state.step));
+    const panel = $("#mainPanel");
+    const views = {
+      guide: renderGuide,
+      character: renderCharacter,
+      worldbook: renderWorldbook,
+      merge: renderMerge,
+      export: renderExport
+    };
+    panel.innerHTML = views[state.step]();
+    bindViewEvents();
+    updateInspector();
+    scheduleSave();
+  } catch (error) {
+    console.error("[render] crash:", error.message, error.stack);
+    if (error.message?.includes("stack")) {
+      state.card = null;
+      state.worldbook = null;
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      setMessage("角色卡太大導致渲染失敗，已清除暫存。請重新上傳。", "error");
+    } else {
+      setMessage(`渲染失敗：${error.message}`, "error");
+    }
+  }
 }
 
 function renderGuide() {
@@ -1228,20 +1244,28 @@ async function handleCardFile(file) {
       if (state.card.data.character_book) state.worldbook = normalizeWorldBook(state.card.data.character_book);
       setMessage(`已從 PNG 讀取角色卡：${file.name}`);
     } else {
+      console.log("[DEBUG] step 1: parsing JSON...");
       const card = JSON.parse(await file.text());
+      console.log("[DEBUG] step 2: normalizeCard...");
       state.card = normalizeCard(card);
+      console.log("[DEBUG] step 3: resetAlternateGreetingDrafts...");
       resetAlternateGreetingDrafts(state.card);
       state.cardFileName = file.name;
       state.sourcePngBytes = null;
       state.sourcePngUrl = "";
       state.exportImageName = "";
+      console.log("[DEBUG] step 4: normalizeWorldBook...");
       if (state.card.data.character_book) state.worldbook = normalizeWorldBook(state.card.data.character_book);
+      console.log("[DEBUG] step 5: setMessage...");
       setMessage(`已載入角色卡 JSON：${file.name}`);
     }
     if (!state.workflow) state.workflow = "repair";
     state.step = "character";
+    console.log("[DEBUG] step 6: render...");
     render();
+    console.log("[DEBUG] step 7: done!");
   } catch (error) {
+    console.error("[DEBUG] CRASH:", error.message, error.stack);
     setMessage(`角色卡載入失敗：${error.message}`, "error");
   }
 }
@@ -1618,7 +1642,12 @@ function latin1Encode(text) {
 }
 
 function latin1Decode(bytes) {
-  return String.fromCharCode(...bytes);
+  let result = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    result += String.fromCharCode(...bytes.slice(i, i + chunkSize));
+  }
+  return result;
 }
 
 function bytesToBase64(bytes) {
@@ -1731,6 +1760,7 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 function init() {
+  console.log("[init] app.js v2-debug loaded");
   const controls = $("#fileControlsTemplate").content.cloneNode(true);
   document.body.appendChild(controls);
   $$(".step-link").forEach((button) => button.addEventListener("click", () => {
@@ -1757,9 +1787,14 @@ function init() {
     event.target.value = "";
   });
   if (loadFromStorage()) {
+    console.log("[DEBUG] init: loadFromStorage OK, step:", state.step);
     setMessage("已自動恢復上次的編輯內容。封面圖片需要重新上傳。");
+  } else {
+    console.log("[DEBUG] init: no saved data");
   }
+  console.log("[DEBUG] init: calling render...");
   render();
+  console.log("[DEBUG] init: render done");
   window.addEventListener("beforeunload", (e) => {
     if (state.card || state.worldbook) {
       saveToStorage();
