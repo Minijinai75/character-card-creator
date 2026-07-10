@@ -219,3 +219,6 @@
 - 清掉當機遺留的孤兒 git 程序＋殭屍 index.lock
 - 收編 GitHub 遠端歷史（詳 PROJECT_STATUS / DECISIONS），origin 就位，部署改走 push 流程
 - 補齊 continuity 檔（本檔＋STATUS＋DECISIONS＋VERIFY）
+
+## 26-07-10 17:32（霽野窗）
+- feat：角色卡編輯區新增「創作者備註」欄（Mini 需求：酒館可編輯但工坊不行）——綁 data.creator_notes、同步頂層 creatorcomment；已 push 部署
