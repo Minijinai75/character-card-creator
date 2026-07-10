@@ -109,7 +109,7 @@ const stepTitles = {
 const nextSteps = {
   guide: "先選擇全新製作或修卡。全新製作會直接打開空白模板；修卡會引導匯入既有角色卡。",
   character: "全新製作可直接填寫或複製 AI Skill；修卡可手動調整，或到匯出區拆成 JSON 給 AI 協助。",
-  worldbook: "全新製作可直接填 entries 或複製世界書 Skill；修卡可檢查既有 entries 後再合併。",
+  worldbook: "全新製作可直接填條目或複製世界書 Skill；修卡可檢查既有條目後再合併。",
   merge: "合併完成後，到匯出區下載 JSON 或 PNG 角色卡。",
   export: "匯出前先看檢查狀態；若有警告，回到對應區塊修正。"
 };
@@ -246,7 +246,7 @@ const characterPrompts = [
 const worldPrompts = [
   {
     title: "素材轉世界書 JSON",
-    desc: "把世界觀素材整理成世界書 entries。",
+    desc: "把世界觀素材整理成世界書條目。",
     prompt: `你是 SillyTavern 世界書製作助手。請把我提供的世界觀素材整理成世界書 JSON。
 
 要求：
@@ -267,7 +267,7 @@ const worldPrompts = [
 8. insertion_order 不要全部卡在 100 附近，請用明顯區段保留排序空間。`
   },
   {
-    title: "世界觀筆記拆 entries",
+    title: "世界觀筆記拆條目",
     desc: "把長篇設定拆成多條可觸發世界書。",
     prompt: `請把我提供的長篇世界觀筆記拆成 SillyTavern 世界書 entries。
 
@@ -294,7 +294,7 @@ const worldPrompts = [
   },
   {
     title: "依注意力分佈重排世界書",
-    desc: "依 U 形注意力原則，重排 entries 的位置與順序。",
+    desc: "依 U 形注意力原則，重排條目的位置與順序。",
     prompt: `請檢查我提供的 SillyTavern 世界書 JSON，依「長上下文注意力常呈 U 形分佈」的原則，提出重排建議或輸出重排後 JSON。
 
 重排原則：
@@ -312,7 +312,7 @@ const worldPrompts = [
 如果你輸出 JSON，請只輸出合法 JSON，不要 Markdown code fence。`
   },
   {
-    title: "檢查 entries 品質",
+    title: "檢查條目品質",
     desc: "檢查世界書條目是否太長、太碎、key 不足。",
     prompt: `請檢查我提供的 SillyTavern 世界書 entries。
 
@@ -325,7 +325,7 @@ const worldPrompts = [
   },
   {
     title: "條目配置推薦",
-    desc: "依條目類型推薦 position、order、constant、depth 的最佳配置。",
+    desc: "依條目類型推薦位置、順序、狀態、深度的最佳配置。",
     prompt: `你是 SillyTavern 世界書配置助手。請讀取我提供的世界書 JSON，依最佳實踐推薦每個條目的配置。
 
 推薦配置參考：
@@ -461,7 +461,7 @@ function normalizeEntry(entry, index) {
   next.id = Number.isFinite(Number(next.id)) ? Number(next.id) : index;
   next.keys = toStringArray(next.keys);
   next.secondary_keys = toStringArray(next.secondary_keys);
-  next.comment = String(next.comment ?? `Entry ${index + 1}`);
+  next.comment = String(next.comment ?? `條目 ${index + 1}`);
   next.content = String(next.content ?? "");
   next.constant = Boolean(next.constant);
   next.selective = next.selective !== false;
@@ -497,7 +497,12 @@ function toStringArray(value) {
 }
 
 function estimateTokens(text) {
-  return Math.ceil(String(text || "").length / 3.2);
+  const str = String(text || "");
+  let tokens = 0;
+  for (const char of str) {
+    tokens += char.charCodeAt(0) > 0x2e80 ? 1.5 : 0.25;
+  }
+  return Math.ceil(tokens);
 }
 
 function validate() {
@@ -507,25 +512,26 @@ function validate() {
     return state.warnings;
   }
   const data = getData();
-  if (state.card.spec !== "chara_card_v3") warnings.push("角色卡 spec 不是 chara_card_v3。");
-  if (String(state.card.spec_version) !== "3.0") warnings.push("角色卡 spec_version 不是 3.0。");
+  const fieldNames = { name: "角色名稱", description: "角色描述", personality: "個性摘要", scenario: "場景設想", first_mes: "首則訊息", mes_example: "對話範例" };
+  if (state.card.spec !== "chara_card_v3") warnings.push("角色卡規格不是 chara_card_v3。");
+  if (String(state.card.spec_version) !== "3.0") warnings.push("角色卡版本不是 3.0。");
   ["name", "description", "personality", "scenario", "first_mes", "mes_example"].forEach((key) => {
-    if ((state.card[key] ?? "") !== (data[key] ?? "")) warnings.push(`頂層 ${key} 與 data.${key} 不一致。`);
+    if ((state.card[key] ?? "") !== (data[key] ?? "")) warnings.push(`頂層「${fieldNames[key]}」與內層不一致。`);
   });
   if (!data.name) warnings.push("角色名稱是空白。");
-  if (!data.description) warnings.push("description 是空白，角色可能缺少核心設定。");
-  if (!data.first_mes) warnings.push("first_mes 是空白，匯入後可能沒有開場白。");
-  if (!Array.isArray(data.alternate_greetings)) warnings.push("alternate_greetings 不是陣列。");
+  if (!data.description) warnings.push("角色描述是空白，角色可能缺少核心設定。");
+  if (!data.first_mes) warnings.push("首則訊息是空白，匯入後可能沒有開場白。");
+  if (!Array.isArray(data.alternate_greetings)) warnings.push("額外問候語格式不正確。");
   const entries = getCardEntries();
   const constantCount = entries.filter((e) => e.constant).length;
-  if (constantCount > 3) warnings.push(`${constantCount} 個世界書條目設為常駐（constant），建議控制在 3 個以內。`);
+  if (constantCount > 3) warnings.push(`${constantCount} 個世界書條目設為常駐，建議控制在 3 個以內。`);
   entries.forEach((entry, index) => {
-    if (!entry.content) warnings.push(`世界書 #${index} content 是空白。`);
-    if (!entry.constant && !toStringArray(entry.keys).length) warnings.push(`世界書 #${index} 不是 constant，但沒有 keys。`);
+    if (!entry.content) warnings.push(`世界書 #${index} 內容是空白。`);
+    if (!entry.constant && !toStringArray(entry.keys).length) warnings.push(`世界書 #${index} 不是常駐，但沒有關鍵字。`);
     const entryTokens = estimateTokens(entry.content);
     if (entryTokens > 500) warnings.push(`世界書 #${index}「${entry.comment || ""}」約 ${entryTokens} tokens，建議拆分（200-500 為佳）。`);
-    if (!entry.constant && toStringArray(entry.keys).length > 0 && toStringArray(entry.keys).length < 3) warnings.push(`世界書 #${index} keys 只有 ${toStringArray(entry.keys).length} 個，建議至少 3 個（含暱稱、別名）。`);
-    if (entry.position === "at_depth" && entry.extensions?.depth > 1) warnings.push(`世界書 #${index} 使用 D${entry.extensions.depth}，D2 以上會打斷上下文，建議 D0 或 D1。`);
+    if (!entry.constant && toStringArray(entry.keys).length > 0 && toStringArray(entry.keys).length < 3) warnings.push(`世界書 #${index} 關鍵字只有 ${toStringArray(entry.keys).length} 個，建議至少 3 個。`);
+    if (entry.position === "at_depth" && entry.extensions?.depth > 1) warnings.push(`世界書 #${index} 使用深度 ${entry.extensions.depth}，深度 2 以上會打斷上下文。`);
   });
   state.warnings = warnings;
   return warnings;
@@ -541,7 +547,7 @@ function updateInspector() {
     <div class="stat"><strong>${escapeHtml(workflowLabel())}</strong><span>工作流</span></div>
     <div class="stat"><strong>${escapeHtml(cardName)}</strong><span>角色卡</span></div>
     <div class="stat"><strong>${escapeHtml(worldName)}</strong><span>世界書</span></div>
-    <div class="stat"><strong>${entries}</strong><span>entries</span></div>
+    <div class="stat"><strong>${entries}</strong><span>條目數</span></div>
   `;
   const pill = $("#statusPill");
   if (!state.card) {
@@ -558,6 +564,53 @@ function updateInspector() {
     ? warnings.map((warning) => `<div class="warning">${escapeHtml(warning)}</div>`).join("")
     : `<div class="warning info">${state.card ? "目前沒有明顯格式警告。" : "請先載入或建立角色卡。"}</div>`;
   $("#nextStep").textContent = nextSteps[state.step];
+  scheduleSave();
+}
+
+const STORAGE_KEY = "cc-creator-autosave";
+let saveTimer = null;
+
+function scheduleSave() {
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveToStorage, 800);
+}
+
+function saveToStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      card: state.card,
+      worldbook: state.worldbook,
+      workflow: state.workflow,
+      step: state.step,
+      cardFileName: state.cardFileName,
+      worldFileName: state.worldFileName,
+      mergeStrategy: state.mergeStrategy,
+      exportImageName: state.exportImageName,
+      altGreetingDraftCount: state.altGreetingDraftCount,
+      ts: Date.now()
+    }));
+  } catch {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const save = JSON.parse(raw);
+    if (!save.card && !save.worldbook) return false;
+    if (save.card) state.card = normalizeCard(save.card);
+    if (save.worldbook) state.worldbook = normalizeWorldBook(save.worldbook);
+    state.workflow = save.workflow || "";
+    state.step = save.step || "guide";
+    state.cardFileName = save.cardFileName || "";
+    state.worldFileName = save.worldFileName || "";
+    state.mergeStrategy = save.mergeStrategy || "replace";
+    state.exportImageName = save.exportImageName || "";
+    state.altGreetingDraftCount = save.altGreetingDraftCount || 0;
+    state.sourcePngBytes = null;
+    state.sourcePngUrl = "";
+    return true;
+  } catch { return false; }
 }
 
 function workflowLabel() {
@@ -580,6 +633,7 @@ function render() {
   panel.innerHTML = views[state.step]();
   bindViewEvents();
   updateInspector();
+  scheduleSave();
 }
 
 function renderGuide() {
@@ -624,18 +678,18 @@ function renderGuide() {
             <li><strong>角色前</strong>：世界觀、核心規則、不變設定。order 越小越重要。</li>
             <li><strong>角色後</strong>：NPC、場景、次要補充。</li>
             <li><strong>D0</strong>：只放最怕被忽略的行為指令和硬規則。D2 以上不要用。</li>
-            <li><strong>常駐不超過 3 條</strong>，其餘用 keys 觸發，每條至少 3 個 keys。</li>
+            <li><strong>常駐不超過 3 條</strong>，其餘用關鍵字觸發，每條至少 3 個關鍵字。</li>
           </ul>
         </section>
       </div>
       <div class="section-grid three">
         <section class="panel">
           <h3>角色卡</h3>
-          <p>全新製作會打開空白模板；修卡會匯入既有卡。角色卡 Skill 放在角色卡區塊。</p>
+          <p>全新製作會打開空白模板；修卡會匯入既有卡。</p>
         </section>
         <section class="panel">
           <h3>世界書</h3>
-          <p>全新製作會打開空白世界書；修卡可從既有卡拆出世界書。世界書 Skill 已加入注意力分佈原則。</p>
+          <p>全新製作會打開空白世界書；修卡可從既有卡拆出世界書。</p>
         </section>
         <section class="panel">
           <h3>合併匯出</h3>
@@ -686,22 +740,25 @@ function renderCharacter() {
             <div class="badge-list">
               <span class="badge">${escapeHtml(state.card?.spec || "unknown")}</span>
               <span class="badge">${escapeHtml(state.card?.spec_version || "-")}</span>
-              <span class="badge">${getCardEntries().length} entries</span>
+              <span class="badge">${getCardEntries().length} 條目</span>
             </div>
           </div>
         </div>
-        <div class="section-grid">
-          <section class="panel">
-            <h3>主欄位</h3>
-            ${renderCharacterFields(data)}
-          </section>
-          <section class="panel">
-            <h3>角色卡 AI Skill</h3>
+        <section class="panel">
+          <h3>主欄位</h3>
+          ${renderCharacterFields(data)}
+        </section>
+        <div class="skill-section">
+          <button class="skill-toggle" type="button">
+            <span>角色卡 AI Skill</span>
+            <span class="skill-arrow">▶</span>
+          </button>
+          <div class="skill-content panel">
             <p>${state.workflow === "repair" ? "可把匯出的角色卡 JSON 貼給 AI，請它檢查一致性或修復格式，再貼回網站。" : "可把你的素材貼在 prompt 後面，讓 AI 依格式產出 JSON，再回網站檢查。"}</p>
             <div class="prompt-row">
               ${renderPromptButtons(characterPrompts)}
             </div>
-          </section>
+          </div>
         </div>
       ` : `
         <div class="dropzone" data-drop-card>
@@ -767,9 +824,11 @@ function field(key, label, value, type = "textarea", mode = "mirror", help = "")
 function renderPromptButtons(prompts) {
   return prompts.map((item, index) => `
     <div class="prompt-card">
-      <strong>${escapeHtml(item.title)}</strong>
-      <p>${escapeHtml(item.desc)}</p>
-      <button class="button" data-copy-prompt="${index}" type="button">複製 prompt</button>
+      <div class="prompt-info">
+        <strong>${escapeHtml(item.title)}</strong>
+        <small>${escapeHtml(item.desc)}</small>
+      </div>
+      <button class="button" data-copy-prompt="${index}" type="button">複製</button>
     </div>
   `).join("");
 }
@@ -782,14 +841,14 @@ function renderWorldbook() {
       <div class="view-head">
         <div>
           <h2>世界書</h2>
-          <p>${state.workflow === "repair" ? "修卡模式：可檢查既有 entries，也可拆出世界書 JSON 給 AI 依注意力分佈重排。" : "全新製作模式：從空白世界書開始，或複製 Skill 給 AI 產出 entries，再回來合併。"}</p>
+          <p>${state.workflow === "repair" ? "修卡模式：可檢查既有條目，也可拆出世界書給 AI 依注意力分佈重排。" : "全新製作模式：從空白世界書開始，或複製提示詞給 AI 產出條目，再回來合併。"}</p>
         </div>
         <div class="action-row">
           <button class="button primary" data-pick-world type="button">上傳世界書 JSON</button>
           <button class="button" data-template="worldbook" type="button">載入空白模板</button>
         </div>
       </div>
-      <div class="section-grid">
+      <div class="section-grid" style="grid-template-columns:1fr">
         <section class="panel">
           <h3>世界書資料</h3>
           ${book ? `
@@ -798,19 +857,24 @@ function renderWorldbook() {
               <input data-world-name value="${escapeHtml(book.name || "")}">
             </div>
             <div class="action-row">
-              <button class="button" data-add-entry type="button">新增 entry</button>
+              <button class="button" data-add-entry type="button">新增條目</button>
               <button class="button warn" data-apply-world-to-card type="button" ${state.card ? "" : "disabled"}>套用到角色卡</button>
             </div>
-            <div class="entry-list">${entries.length ? entries.map(renderEntry).join("") : `<div class="empty">目前沒有 entries。</div>`}</div>
+            <div class="entry-list">${entries.length ? entries.map(renderEntry).join("") : `<div class="empty">目前沒有條目。</div>`}</div>
           ` : `<div class="empty">尚未載入世界書。你可以載入空白模板或上傳 JSON。</div>`}
         </section>
-        <section class="panel">
-          <h3>世界書 AI Skill</h3>
+      </div>
+      <div class="skill-section">
+        <button class="skill-toggle" type="button">
+          <span>世界書 AI Skill</span>
+          <span class="skill-arrow">▶</span>
+        </button>
+        <div class="skill-content panel">
           <p>世界書 prompt 已融合注意力分佈原則：重要內容吃兩端，中段放可退讓內容，不要迷信全部塞 D0。</p>
           <div class="prompt-row">
             ${renderPromptButtons(worldPrompts)}
           </div>
-        </section>
+        </div>
       </div>
     </div>
   `;
@@ -823,48 +887,45 @@ function renderEntry(entry, index) {
   const posValue = entry.position || "before_char";
   const depthValue = entry.extensions?.depth ?? 4;
   const tokenHint = tokens > 500 ? "，建議拆分" : tokens > 0 && tokens < 50 ? "，內容偏少" : "";
+  const status = entry.enabled === false ? "disabled" : entry.constant ? "constant" : "normal";
+  const posLabel = posValue === "at_depth" ? `@D${depthValue}` : posValue === "after_char" ? "↓角色後" : "↑角色前";
+  const statusLabel = status === "constant" ? "🔵 常駐" : status === "disabled" ? "❌ 停用" : "🟢 一般";
   return `
     <article class="entry-item">
       <div class="entry-title">
         <div>
-          <strong>${escapeHtml(entry.comment || `Entry ${index + 1}`)}</strong>
-          <small>${escapeHtml(toStringArray(entry.keys).join(", ") || "無 keys")}</small>
+          <strong>${escapeHtml(entry.comment || `條目 ${index + 1}`)}</strong>
+          <small>${escapeHtml(toStringArray(entry.keys).join(", ") || "無關鍵字")}</small>
         </div>
         <div class="badge-list">
-          <span class="badge ${entry.constant ? "on" : ""}">${entry.constant ? "常駐" : "觸發"}</span>
-          <span class="badge ${entry.enabled === false ? "off" : "on"}">${entry.enabled === false ? "off" : "on"}</span>
-          <span class="badge">${escapeHtml(posValue === "at_depth" ? `D${depthValue}` : posValue)}</span>
+          <span class="badge ${status === "constant" ? "on" : status === "disabled" ? "off" : ""}">${statusLabel}</span>
+          <span class="badge">${escapeHtml(posLabel)}</span>
           <span class="badge">#${index}</span>
         </div>
       </div>
       <div class="entry-body">
-        <div class="form-grid">
-          <div class="field"><label>comment</label><input data-entry-field="comment" data-entry-index="${index}" value="${escapeHtml(entry.comment || "")}"></div>
-          <div class="field"><label>constant（常駐/觸發）</label><select data-entry-field="constant" data-entry-index="${index}">
-            <option value="true" ${entry.constant ? "selected" : ""}>true（常駐：永遠注入）</option>
-            <option value="false" ${!entry.constant ? "selected" : ""}>false（觸發：靠 keys）</option>
+        <div class="field"><label>條目標題</label><input data-entry-field="comment" data-entry-index="${index}" value="${escapeHtml(entry.comment || "")}"></div>
+        <div class="entry-config">
+          <div class="field"><label>狀態</label><select data-entry-field="status" data-entry-index="${index}">
+            <option value="constant" ${status === "constant" ? "selected" : ""}>🔵 常駐</option>
+            <option value="normal" ${status === "normal" ? "selected" : ""}>🟢 一般</option>
+            <option value="disabled" ${status === "disabled" ? "selected" : ""}>❌ 停用</option>
           </select></div>
-          <div class="field"><label>position</label><select data-entry-field="position" data-entry-index="${index}">
-            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>before_char（角色前）</option>
-            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>after_char（角色後）</option>
-            <option value="at_depth" ${posValue === "at_depth" ? "selected" : ""}>at_depth（深度插入）</option>
+          <div class="field"><label>插入位置</label><select data-entry-field="position" data-entry-index="${index}">
+            <option value="before_char" ${posValue === "before_char" ? "selected" : ""}>↑角色前</option>
+            <option value="after_char" ${posValue === "after_char" ? "selected" : ""}>↓角色後</option>
+            <option value="at_depth" ${posValue === "at_depth" ? "selected" : ""}>@深度</option>
           </select></div>
-          <div class="field"><label>enabled</label><select data-entry-field="enabled" data-entry-index="${index}">
-            <option value="true" ${entry.enabled !== false ? "selected" : ""}>true</option>
-            <option value="false" ${entry.enabled === false ? "selected" : ""}>false</option>
-          </select></div>
+          <div class="field"><label>順序</label><input type="number" data-entry-field="insertion_order" data-entry-index="${index}" value="${escapeHtml(entry.insertion_order ?? 90)}"></div>
+          <div class="field"><label>深度</label><input type="number" data-entry-field="depth" data-entry-index="${index}" value="${escapeHtml(depthValue)}" min="0" max="999"></div>
         </div>
         <div class="form-grid">
-          <div class="field"><label>depth（at_depth 時生效）</label><input type="number" data-entry-field="depth" data-entry-index="${index}" value="${escapeHtml(depthValue)}" min="0" max="999"></div>
-          <div class="field"><label>insertion_order</label><input type="number" data-entry-field="insertion_order" data-entry-index="${index}" value="${escapeHtml(entry.insertion_order ?? 90)}"></div>
+          <div class="field"><label>主要關鍵字（每行一個，建議 ≥ 3）</label><textarea data-entry-field="keys" data-entry-index="${index}">${escapeHtml(keys)}</textarea></div>
+          <div class="field"><label>選填過濾器（每行一個）</label><textarea data-entry-field="secondary_keys" data-entry-index="${index}">${escapeHtml(secondary)}</textarea></div>
         </div>
-        <div class="form-grid">
-          <div class="field"><label>keys，每行一個（建議 ≥ 3 個）</label><textarea data-entry-field="keys" data-entry-index="${index}">${escapeHtml(keys)}</textarea></div>
-          <div class="field"><label>secondary_keys，每行一個</label><textarea data-entry-field="secondary_keys" data-entry-index="${index}">${escapeHtml(secondary)}</textarea></div>
-        </div>
-        <div class="field"><label>content <span class="token-count">（約 ${tokens} tokens${tokenHint}）</span></label><textarea data-entry-field="content" data-entry-index="${index}">${escapeHtml(entry.content || "")}</textarea></div>
+        <div class="field"><label>內容 <span class="token-count">（約 ${tokens} tokens${tokenHint}）</span></label><textarea data-entry-field="content" data-entry-index="${index}">${escapeHtml(entry.content || "")}</textarea></div>
         <div class="action-row">
-          <button class="button danger" data-remove-entry="${index}" type="button">刪除 entry</button>
+          <button class="button danger" data-remove-entry="${index}" type="button">刪除條目</button>
         </div>
       </div>
     </article>
@@ -889,8 +950,8 @@ function renderMerge() {
           <div class="stats">
             <div class="stat"><strong>${escapeHtml(cardName)}</strong><span>角色卡</span></div>
             <div class="stat"><strong>${escapeHtml(bookName)}</strong><span>世界書</span></div>
-            <div class="stat"><strong>${book?.entries?.length || 0}</strong><span>待合併 entries</span></div>
-            <div class="stat"><strong>${getCardEntries().length}</strong><span>卡內 entries</span></div>
+            <div class="stat"><strong>${book?.entries?.length || 0}</strong><span>待合併條目</span></div>
+            <div class="stat"><strong>${getCardEntries().length}</strong><span>卡內條目</span></div>
           </div>
           <div class="action-row">
             <button class="button" data-pick-card type="button">上傳角色卡</button>
@@ -902,7 +963,7 @@ function renderMerge() {
           <h3>合併策略</h3>
           <div class="merge-options">
             ${mergeOption("replace", "取代", "用目前世界書取代角色卡內的 character_book。")}
-            ${mergeOption("append", "追加", "保留角色卡原本 entries，將目前世界書接到後面。")}
+            ${mergeOption("append", "追加", "保留角色卡原本條目，將目前世界書接到後面。")}
             ${mergeOption("dedupe", "去重追加", "依 comment 與 content 去重後追加，適合整理多次生成結果。")}
           </div>
           <div class="action-row">
@@ -924,46 +985,62 @@ function mergeOption(value, title, desc) {
 }
 
 function renderExport() {
+  const hasCard = !!state.card;
+  const cardName = hasCard ? escapeHtml(state.card.data?.name || state.card.name || "未命名角色") : "";
+  const avatar = state.sourcePngUrl
+    ? `<img src="${state.sourcePngUrl}" alt="封面預覽">`
+    : escapeHtml((cardName || "卡").slice(0, 1));
   return `
     <div class="view">
       <div class="view-head">
         <div>
           <h2>匯出</h2>
-          <p>匯出前請看右側檢查狀態。JSON 會保留未知欄位；PNG 會把角色卡 JSON 寫入 chara metadata。</p>
+          <p>匯出前請確認檢查狀態。JSON 保留所有欄位；PNG 把角色卡 JSON 寫入 chara metadata。</p>
         </div>
       </div>
-      <div class="section-grid">
-        <section class="panel">
-          <h3>匯出檔案</h3>
-          <div class="action-row">
-            <button class="button" data-pick-export-image type="button" ${state.card ? "" : "disabled"}>上傳封面圖片</button>
-            <button class="button primary" data-export-json type="button" ${state.card ? "" : "disabled"}>下載 JSON</button>
-            <button class="button primary" data-export-png type="button" ${state.card ? "" : "disabled"}>下載 PNG</button>
-            <button class="button" data-copy-json type="button" ${state.card ? "" : "disabled"}>複製 JSON</button>
+      ${hasCard ? `
+        <div class="card-summary">
+          <div class="avatar-preview">${avatar}</div>
+          <div>
+            <h3>${cardName}</h3>
+            <p>${escapeHtml(exportImageNote())}</p>
           </div>
-          <div class="action-row">
-            <button class="button" data-export-character-only type="button" ${state.card ? "" : "disabled"}>拆出角色卡 JSON</button>
-            <button class="button" data-export-world-only type="button" ${state.card || state.worldbook ? "" : "disabled"}>拆出世界書 JSON</button>
-          </div>
-          <p>${escapeHtml(exportImageNote())}</p>
-          ${state.sourcePngUrl ? `
-            <div class="card-summary">
-              <div class="avatar-preview"><img src="${state.sourcePngUrl}" alt="匯出封面預覽"></div>
-              <div>
-                <h3>${escapeHtml(state.exportImageName || state.cardFileName || "目前封面")}</h3>
-                <p>下載 PNG 時會把目前角色卡 JSON 寫入這張圖片的 chara metadata。</p>
-              </div>
+        </div>
+        <div class="section-grid">
+          <section class="panel">
+            <h3>PNG 角色卡</h3>
+            <p>上傳封面圖片，再下載成可匯入 SillyTavern 的 PNG 角色卡。</p>
+            <div class="export-actions">
+              <button class="button" data-pick-export-image type="button">上傳封面圖片</button>
+              <button class="button primary export-btn" data-export-png type="button">下載 PNG</button>
             </div>
-          ` : ""}
-        </section>
+          </section>
+          <section class="panel">
+            <h3>JSON 角色卡</h3>
+            <p>下載或複製完整角色卡 JSON（含世界書）。</p>
+            <div class="export-actions">
+              <button class="button primary export-btn" data-export-json type="button">下載 JSON</button>
+              <button class="button" data-copy-json type="button">複製 JSON</button>
+            </div>
+          </section>
+        </div>
         <section class="panel">
-          <h3>JSON 預覽</h3>
-          ${state.card ? `<pre class="json-preview">${escapeHtml(JSON.stringify(state.card, null, 2))}</pre>` : `<div class="empty">尚未載入角色卡。</div>`}
+          <h3>修卡用拆分</h3>
+          <p>拆出不含世界書的角色主體或世界書條目，交給 AI 修完再回來合併。</p>
+          <div class="export-actions">
+            <button class="button" data-export-character-only type="button">拆出角色卡 JSON</button>
+            <button class="button" data-export-world-only type="button">拆出世界書 JSON</button>
+          </div>
         </section>
-      </div>
+      ` : `
+        <div class="empty">
+          <strong>尚未載入角色卡</strong>
+          <p>請先到角色卡或合併區載入角色卡，再回來匯出。</p>
+        </div>
+      `}
       <section class="panel">
-        <h3>修卡用拆分</h3>
-        <p>如果想讓 AI 協助修卡，可以先用「拆出角色卡 JSON」取得不含世界書的角色主體，再用「拆出世界書 JSON」取得 entries。修完後回到角色卡 / 世界書區匯入，最後合併匯出。</p>
+        <h3>JSON 預覽</h3>
+        ${hasCard ? `<pre class="json-preview">${escapeHtml(JSON.stringify(state.card, null, 2))}</pre>` : `<div class="empty">載入角色卡後會顯示完整 JSON。</div>`}
       </section>
     </div>
   `;
@@ -998,6 +1075,9 @@ function bindViewEvents() {
   $("[data-export-character-only]")?.addEventListener("click", exportCharacterOnlyJson);
   $("[data-export-world-only]")?.addEventListener("click", exportWorldOnlyJson);
   $("[data-copy-json]")?.addEventListener("click", copyJson);
+  $$(".skill-toggle").forEach((btn) => btn.addEventListener("click", () => {
+    btn.closest(".skill-section").classList.toggle("expanded");
+  }));
   bindDropzones();
   if (window.matchMedia("(max-width: 768px)").matches) {
     $$(".entry-item").forEach((item) => {
@@ -1076,6 +1156,13 @@ function handleEntryField(event) {
   const fieldName = event.target.dataset.entryField;
   let value = event.target.value;
   if (fieldName === "keys" || fieldName === "secondary_keys") value = toStringArray(value);
+  if (fieldName === "status") {
+    entry.constant = value === "constant";
+    entry.enabled = value !== "disabled";
+    updateInspector();
+    render();
+    return;
+  }
   if (fieldName === "enabled") value = value === "true";
   if (fieldName === "constant") value = value === "true";
   if (fieldName === "insertion_order") value = Number(value);
@@ -1195,7 +1282,7 @@ async function handleWorldFile(file) {
 function addEntry() {
   const book = state.worldbook || getCharacterBook();
   if (!book) return;
-  book.entries.push(normalizeEntry({ comment: `Entry ${book.entries.length + 1}`, keys: [], content: "" }, book.entries.length));
+  book.entries.push(normalizeEntry({ comment: `條目 ${book.entries.length + 1}`, keys: [], content: "" }, book.entries.length));
   render();
 }
 
@@ -1256,12 +1343,24 @@ function reindexEntries(entries) {
 function copyPrompt(index) {
   const prompts = state.step === "worldbook" ? worldPrompts : characterPrompts;
   copyText(prompts[index]?.prompt || "");
-  setMessage("已複製 AI Skill prompt。");
+  const btn = $$("[data-copy-prompt]")[index];
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = "已複製 ✓";
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+  }
 }
 
 function copyJson() {
   copyText(JSON.stringify(state.card, null, 2));
-  setMessage("已複製角色卡 JSON。");
+  const btn = $("[data-copy-json]");
+  if (btn) {
+    const original = btn.textContent;
+    btn.textContent = "已複製 ✓";
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 1500);
+  }
 }
 
 function exportImageNote() {
@@ -1642,7 +1741,16 @@ function init() {
     handleExportImageFile(event.target.files[0]);
     event.target.value = "";
   });
+  if (loadFromStorage()) {
+    setMessage("已自動恢復上次的編輯內容。封面圖片需要重新上傳。");
+  }
   render();
+  window.addEventListener("beforeunload", (e) => {
+    if (state.card || state.worldbook) {
+      saveToStorage();
+      e.preventDefault();
+    }
+  });
   $(".inspector-head")?.addEventListener("click", () => {
     if (!window.matchMedia("(max-width: 768px)").matches) return;
     $(".inspector")?.classList.toggle("collapsed");

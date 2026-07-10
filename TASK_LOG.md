@@ -159,6 +159,44 @@
 - 初始化 git repo
 - 更新 README.md、PROJECT_STATUS.md、TASK_LOG.md
 
+## 26/06/18 02:43 — 全站中文化＋匯出頁重構＋自動存檔
+
+### 匯出頁重構
+- 按操作邏輯分三區：PNG 角色卡（上傳封面＋下載 PNG）、JSON 角色卡（下載＋複製）、修卡用拆分
+- 無角色卡時顯示引導空狀態
+- 角色卡摘要（含封面預覽）移到頂部
+
+### 全站中文化
+- 所有面向用戶的英文改中文：label、badge、select 選項、驗證訊息、prompt 標題/描述
+- entries→條目、keys→關鍵字、content→內容、constant→常駐、enabled→啟用
+- Entry N→條目 N、tokens 保留不翻譯
+
+### 世界書條目重構
+- constant＋enabled 合併為「狀態」三態選擇（🔵常駐/🟢一般/❌停用）
+- 配置欄改 4 欄 grid（桌面）/ 2 欄（手機），從 3 行縮為 1 行
+- 條目標題允許換行不再截斷
+- 插入位置選項縮短（角色定義之前→角色前）
+
+### AI Skill 改為可收合分頁
+- 角色卡頁和世界書頁的 AI Skill 從並排面板改成收合式分頁
+- 預設收合，點擊展開，箭頭旋轉指示
+- 主欄位拿回全寬
+
+### Skill 卡片改緊湊清單列
+- 從大方塊改成 flex 單行（標題＋小描述＋複製按鈕）
+- 手機版隱藏描述只顯示標題＋按鈕
+- 複製按鈕點擊後顯示「已複製 ✓」1.5 秒
+
+### 防護與修復
+- 長文字溢出防護：card-summary、stat、warning、panel、message 加 overflow-wrap
+- token 估算改中文權重（中文字 ×1.5、英文字 ×0.25）
+- localStorage 自動存檔：每次編輯 0.8 秒後存入、重開自動恢復、關頁前立即存檔＋離開提醒
+
+### 基礎設施
+- 建立獨立 GitHub repo：Minijinai75/character-card-creator
+- 複製到 ST-LESSON/tools/角色卡工坊/
+- 更新 PROJECT_STATUS.md、TASK_LOG.md
+
 
 
 

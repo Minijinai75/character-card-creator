@@ -1,10 +1,10 @@
 ﻿# Project Status
 
-本次更新時間：26/06/18 01:48
+本次更新時間：26/06/18 02:43
 
 ## Current Phase
 
-靜態前端 MVP 已完成，加上手機優先 UI 重構、製卡知識整合（MVU Kit＋注意力分佈）、排版優化。已初始化 git repo。尚未部署、尚未用真實卡片做完整人工測試。
+靜態前端 MVP 已完成全面打磨。已建立獨立 GitHub repo（Minijinai75/character-card-creator）並推上去。尚未部署、尚未用真實卡片做完整人工測試。
 
 ## Completed
 
@@ -56,32 +56,44 @@
 - 已將 `對話範例` 排到 `首則訊息` 前面。
 - 已將 `alternate_greetings` 改成可逐格新增 / 刪除的編輯方式，不再使用 `---` 分隔單一 textarea。
 
-## 26/06/18 新增
+## 26/06/18 01:48 新增
 
 - 手機優先 UI 重構：底部分頁列、44px 觸控目標、Inspector 收合、世界書手風琴、Toast 通知、iOS 安全區
-- 製卡知識整合：使用說明頁加入核心原則＋世界書擺放要點、角色卡欄位引導升級
-- 世界書條目表單升級：constant/at_depth/depth 欄位、token 估算顯示
-- 驗證警告升級：常駐上限、token 長度、keys 不足、D2+ 警告
+- 製卡知識整合（MVU Kit＋注意力分佈，排除變量系統）
+- 世界書條目表單升級：狀態三態選擇、at_depth/depth 欄位、token 估算
+- 驗證警告升級：常駐上限、token 長度、關鍵字不足、深度 2+ 警告
 - AI Skill 新增：個性調色盤設計、去八股檢查、條目配置推薦
-- 素材轉角色卡 prompt 升級：融入差異化外貌＋調色盤＋白描原則
-- 排版全面優化：workflow-card、tips-card 視覺層級、間距加大、字型層級、元件打磨
+- 排版全面優化：workflow-card、tips-card、間距加大、字型層級
+
+## 26/06/18 02:43 新增
+
+- 匯出頁 UI 重構：PNG 一組、JSON 一組、拆分一組，按操作邏輯分區
+- 全站中文化：所有面向用戶的英文改中文（label、badge、驗證訊息、prompt 標題）
+- 世界書條目重構：constant+enabled 合併為「狀態」三態、配置欄 4 欄 grid、標題允許換行
+- AI Skill 改為可收合分頁：預設收合，主欄位拿回全寬
+- Skill 卡片改緊湊清單列
+- 複製按鈕回饋：點擊後顯示「已複製 ✓」1.5 秒
+- 長文字溢出防護：card-summary、stat、warning、panel、message
+- localStorage 自動存檔：防手機意外關頁遺失編輯，重開自動恢復
+- token 估算改中文權重（中文字 ×1.5、英文字 ×0.25）
+- 建立獨立 GitHub repo：Minijinai75/character-card-creator
 
 ## Next Step
 
 - 用真實角色卡（JSON＋PNG）做完整人工測試
-- 用手機實機測試手機版 UI
+- 用手機實機測試
 - 決定部署方案（GitHub Pages / Zeabur / 其他）
-- 建立 GitHub repo
 
 ## Blockers
 
 - 尚未部署
 - 尚未用真實卡片做人工測試
-- 尚未用手機實機測試
 
 ## Notes
 
-目前資料夾位於 Google Drive 同步路徑。靜態檔案無需 build。
+- 原始碼在 Google Drive 同步路徑，靜態檔案無需 build
+- 獨立 repo：https://github.com/Minijinai75/character-card-creator
+- 也放在 ST-LESSON repo 的 tools/角色卡工坊/
 
 
 
