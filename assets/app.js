@@ -1470,22 +1470,28 @@ function bindDropzone(zone, handler) {
 
 function extractCardFromPng(bytes) {
   const chunks = readPngChunks(bytes);
+  let charaCard = null;
+  let ccv3Card = null;
   for (const chunk of chunks) {
-    const keyword = getPngTextKeyword(chunk);
-    if (keyword !== "chara") continue;
+    const keyword = getPngTextKeyword(chunk).toLowerCase();
+    if (keyword !== "chara" && keyword !== "ccv3") continue;
+    let card = null;
     if (chunk.type === "tEXt") {
-      const text = readTextChunk(chunk.data);
-      return { card: parseCharaText(text.text) };
-    }
-    if (chunk.type === "iTXt") {
+      card = parseCharaText(readTextChunk(chunk.data).text);
+    } else if (chunk.type === "iTXt") {
       const text = readItxtChunk(chunk.data);
-      if (text.compressed) throw new Error("此 PNG 的 chara iTXt 使用壓縮，目前無法在純靜態版本解析。");
-      return { card: parseCharaText(text.text) };
+      if (text.compressed) throw new Error(`此 PNG 的 ${keyword} iTXt 使用壓縮，目前無法在純靜態版本解析。`);
+      card = parseCharaText(text.text);
+    } else if (chunk.type === "zTXt") {
+      throw new Error(`此 PNG 的 ${keyword} zTXt 使用壓縮，目前無法在純靜態版本解析。`);
     }
-    if (chunk.type === "zTXt") {
-      throw new Error("此 PNG 的 chara zTXt 使用壓縮，目前無法在純靜態版本解析。");
-    }
+    if (!card) continue;
+    if (keyword === "ccv3") ccv3Card = card;
+    else charaCard = card;
   }
+  /* ccv3 優先，與 SillyTavern 的讀取順序一致 */
+  if (ccv3Card) return { card: ccv3Card };
+  if (charaCard) return { card: charaCard };
   throw new Error("找不到 SillyTavern chara metadata。");
 }
 
@@ -1562,13 +1568,19 @@ function readItxtChunk(data) {
 
 function insertCardIntoPng(bytes, card) {
   const chunks = readPngChunks(bytes);
-  const payload = createTextChunk("chara", bytesToBase64(new TextEncoder().encode(JSON.stringify(card))));
+  const base64Card = bytesToBase64(new TextEncoder().encode(JSON.stringify(card)));
+  const charaChunk = createTextChunk("chara", base64Card);
+  const ccv3Chunk = createTextChunk("ccv3", base64Card);
   const output = [];
   output.push(bytes.slice(0, 8));
   chunks.forEach((chunk) => {
-    const keyword = getPngTextKeyword(chunk);
-    if (keyword === "chara") return;
-    if (chunk.type === "IEND") output.push(payload);
+    const keyword = getPngTextKeyword(chunk).toLowerCase();
+    /* chara 與 ccv3 都要清：SillyTavern 讀取時 ccv3 優先，殘留舊 ccv3 會蓋掉新寫入的資料 */
+    if (keyword === "chara" || keyword === "ccv3") return;
+    if (chunk.type === "IEND") {
+      output.push(charaChunk);
+      output.push(ccv3Chunk);
+    }
     output.push(bytes.slice(chunk.start, chunk.end));
   });
   return concatBytes(output);

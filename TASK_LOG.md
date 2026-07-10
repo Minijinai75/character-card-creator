@@ -206,3 +206,16 @@
 
 
 
+
+## 26-07-10 16:20（霽野窗）
+
+### 除錯與修復
+- Mini 回報部署版「上傳 JSON＋圖片→下載 PNG→無法匯入酒館」
+- 系統化除錯：工坊 PNG 函式原碼抽進 node、與 SillyTavern 1.18 官方解析器全鏈重現——PNG 塊層、normalizeCard 層均無罪（乾淨封面產物 ST 可讀）
+- 揪出 ccv3 幽靈 bug：寫入只清 chara 不清 ccv3，ST 讀取 ccv3 優先→舊卡還魂/壞塊炸匯入；已修（雙清雙寫＋讀取 ccv3 優先）並以三輪重現驗證
+- Mini 的原始症狀另有嫌疑：測試時 ST 可能處於當機未重啟窗口（同日稍早簡單版匯入失敗同因）；待部署後重測收斂
+
+### 基礎設施
+- 清掉當機遺留的孤兒 git 程序＋殭屍 index.lock
+- 收編 GitHub 遠端歷史（詳 PROJECT_STATUS / DECISIONS），origin 就位，部署改走 push 流程
+- 補齊 continuity 檔（本檔＋STATUS＋DECISIONS＋VERIFY）

@@ -282,3 +282,10 @@
 
 
 
+
+## 26-07-10 ccv3 修復驗證（node 重現，非人工點擊）
+- 方法：從 assets/app.js 原碼抽取 PNG 函式與 normalizeCard 鏈進 node，產物用 SillyTavern 1.18 官方 character-card-parser.js 解析
+- 修復前：舊卡圖當封面→產物含殘留 ccv3，ST 讀到舊卡（33 條目而非塞入的 26）
+- 修復後：舊卡圖封面/乾淨封面→文字塊 chara×1＋ccv3×1，ST 讀到新卡（26 條目），工坊自重讀一致
+- 重現腳本：session 暫存 repro-workshop.mjs / repro-stage2.mjs / repro-stage3.mjs（未入庫）
+- 尚未驗證：Mini 用部署版真實瀏覽器流程重測（待 push 部署後）

@@ -1,10 +1,10 @@
 ﻿# Project Status
 
-本次更新時間：26/06/18 02:43
+本次更新時間：26-07-10 16:20
 
 ## Current Phase
 
-靜態前端 MVP 已完成全面打磨。已建立獨立 GitHub repo（Minijinai75/character-card-creator）並推上去。尚未部署、尚未用真實卡片做完整人工測試。
+**已部署上線**：https://minijinai75.github.io/character-card-creator/（GitHub Pages，main=master 分支自動部署）。ccv3 幽靈 bug 已修（待 push 部署）。本機 repo 已收編 GitHub 遠端歷史並設好 origin，之後改動走正常 commit→push 流程即可部署。
 
 ## Completed
 
@@ -78,15 +78,21 @@
 - token 估算改中文權重（中文字 ×1.5、英文字 ×0.25）
 - 建立獨立 GitHub repo：Minijinai75/character-card-creator
 
+## 26-07-10 16:20 新增
+
+- 收編 GitHub 遠端歷史：本機 repo 原本無 remote、與 GitHub 各自為政（部署靠手動上傳）；已快照本機工作區→加 origin→merge 遠端（程式碼實質相同，文件以本機較新版為準，驗證截圖自遠端入庫）。備份分支 `backup-local-history` 保留舊本機歷史
+- **修 ccv3 幽靈 bug**（Mini 回報「下載 PNG 無法匯入酒館」查案時揪出）：`insertCardIntoPng` 原本只清舊 `chara` 塊、不清 `ccv3`——SillyTavern 讀取時 ccv3 優先，封面若用「曾是角色卡的 PNG」會讓舊卡資料還魂（壞 ccv3 則直接匯入失敗）。修法：寫入端 chara/ccv3 都清都寫（與 ST 官方 write 行為一致）、讀取端 ccv3 優先（與 ST read 順序一致）
+- 修復驗證：工坊函式原碼抽進 node＋ST 官方解析器全鏈重現——舊卡圖封面/乾淨封面兩場景，產物均為 chara×1＋ccv3×1、ST 讀到新卡、工坊自重讀正確（證據見 VERIFY.md）
+
 ## Next Step
 
-- 用真實角色卡（JSON＋PNG）做完整人工測試
+- push origin master → GitHub Pages 自動部署 ccv3 修復
+- Mini 用部署版重測：上傳 JSON＋封面圖→下載 PNG→匯入酒館（若仍失敗，把失敗的 PNG 給霽野驗屍塊結構）
 - 用手機實機測試
-- 決定部署方案（GitHub Pages / Zeabur / 其他）
 
 ## Blockers
 
-- 尚未部署
+- 無
 - 尚未用真實卡片做人工測試
 
 ## Notes

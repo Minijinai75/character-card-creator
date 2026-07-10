@@ -81,3 +81,11 @@
 
 
 
+
+## 26-07-10 PNG metadata 寫入語義
+- 決策：`insertCardIntoPng` 對 `chara` 與 `ccv3` 兩種 tEXt 塊一律「都清、都寫」（同一份 v3 JSON base64 寫兩塊）；`extractCardFromPng` 讀取以 ccv3 優先。
+- 理由：SillyTavern 官方 write 就是雙寫、read 是 ccv3 優先（character-card-parser.js）。只清 chara 會讓封面殘留的舊 ccv3 蓋掉新資料（實測：舊卡圖當封面時 ST 讀到舊卡）。
+
+## 26-07-10 git 歷史收編
+- 決策：認 GitHub 遠端（13 commits）為正統歷史，本機孤兒歷史（3 commits）快照後 merge 收編，備份於 `backup-local-history` 分支；不做任何 force-push。
+- 理由：兩邊程式碼實質相同（僅 BOM/EOL 差異），遠端 commit 訊息較完整；本機文件較新故 merge 以本機為準。部署鏈自此為 commit→push→GitHub Pages。
