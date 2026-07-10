@@ -4,7 +4,7 @@
 
 ## Current Phase
 
-**已部署上線**：https://minijinai75.github.io/character-card-creator/（GitHub Pages，main=master 分支自動部署）。ccv3 幽靈 bug 已修（待 push 部署）。本機 repo 已收編 GitHub 遠端歷史並設好 origin，之後改動走正常 commit→push 流程即可部署。
+**已部署上線**：https://minijinai75.github.io/character-card-creator/（GitHub Pages，main=master 分支自動部署）。ccv3 幽靈 bug 已修並部署（26-07-10 16:17 驗證上線）。本機 repo 已收編 GitHub 遠端歷史並設好 origin，之後改動走正常 commit→push 流程即可部署。
 
 ## Completed
 
@@ -86,14 +86,13 @@
 
 ## Next Step
 
-- push origin master → GitHub Pages 自動部署 ccv3 修復
+- ~~push origin master → GitHub Pages 自動部署 ccv3 修復~~（已完成，部署版驗證含修復）
 - Mini 用部署版重測：上傳 JSON＋封面圖→下載 PNG→匯入酒館（若仍失敗，把失敗的 PNG 給霽野驗屍塊結構）
 - 用手機實機測試
 
 ## Blockers
 
-- 無
-- 尚未用真實卡片做人工測試
+- 無（真實卡片人工測試待 Mini 部署版重測，列於 Next Step）
 
 ## Notes
 
