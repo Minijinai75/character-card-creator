@@ -783,6 +783,7 @@ function renderCharacterFields(data) {
       ${field("name", "角色名稱", data.name, "input")}
       ${field("creator", "作者", data.creator || "", "input", "data-only")}
     </div>
+    ${field("creator_notes", "創作者備註", data.creator_notes || "", "textarea", "data-only", "顯示在酒館角色卡的備註欄：給玩家的說明、使用方式、授權聲明等。不會進 AI 的 prompt。")}
     ${field("description", "角色描述", data.description, "textarea", "mirror", "角色定義主體。外貌只寫偏離 AI 預設的特徵，背景只放影響當前性格的事件。用行為展現個性，不用標籤。")}
     ${field("personality", "個性摘要", data.personality, "textarea", "mirror", "建議用調色盤結構：底色＋主色＋點綴，各附具體衍生行為場景。不要只寫抽象標籤。")}
     ${field("scenario", "場景設想", data.scenario, "textarea", "mirror", "定義角色與 {{user}} 互動的背景條件、關係、場景限制。")}
@@ -1120,6 +1121,8 @@ function handleCardField(event) {
   const key = event.target.dataset.cardField;
   if (event.target.dataset.mode === "data-only") {
     getData()[key] = event.target.value;
+    /* creator_notes 的 v1 頂層對應鍵是 creatorcomment，同步鏡射讓新舊酒館都讀得到 */
+    if (key === "creator_notes" && state.card) state.card.creatorcomment = event.target.value;
   } else {
     updateMirroredField(key, event.target.value);
   }
