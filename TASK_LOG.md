@@ -233,3 +233,6 @@
 - 修三處（commit `e0d99aa`）：`render()` 加 try-catch 含 localStorage 清除恢復／`latin1Decode` 從 spread 展開改分段 chunked／`estimateTokens()` 超過 500K 字元跳過逐字改近似值
 - 加 debug console.log 到 handleCardFile／loadFromStorage／init 三處關鍵路徑、頁尾加 v2-debug 版本標記
 - 已推上 GitHub Pages，Mini Console 截圖驗證 step 1-7 全過；Mini 拍板 debug log 與 v2-debug 標記都留著不清
+
+## 26-07-11 18:55（霽野窗）
+- feat：角色卡編輯區新增「版本」欄（Mini 回報部署版看不到版本格子）——綁 data.character_version（data-only）、頂層同名鍵同步鏡射（與 build-card.js 輸出一致）；normalizeCard 匯入時 data 層優先退頂層，原卡兩處都沒有就不添鍵維持 roundtrip 純度；node --check 過、已 push 部署，待 Mini 部署版驗證（匯入石睿 2.1.1-simple 應能看到版本值）

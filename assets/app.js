@@ -418,6 +418,12 @@ function normalizeCard(card) {
     normalized.data[key] = value;
     normalized[key] = value;
   });
+  /* character_version：data 層優先、退頂層——匯入只有頂層鍵的舊卡也能在表單顯示；原卡兩處都沒有就不添鍵，維持 roundtrip 純度 */
+  const importedVersion = normalized.data.character_version ?? normalized.character_version;
+  if (importedVersion !== undefined && importedVersion !== null) {
+    normalized.data.character_version = importedVersion;
+    normalized.character_version = importedVersion;
+  }
   normalized.data.alternate_greetings = sanitizeAlternateGreetings(normalized.data.alternate_greetings);
   if (!normalized.data.extensions) normalized.data.extensions = {};
   normalized.data.character_book = normalizeWorldBook(
@@ -798,6 +804,7 @@ function renderCharacterFields(data) {
     <div class="form-grid">
       ${field("name", "角色名稱", data.name, "input")}
       ${field("creator", "作者", data.creator || "", "input", "data-only")}
+      ${field("character_version", "版本", data.character_version || "", "input", "data-only")}
     </div>
     ${field("creator_notes", "創作者備註", data.creator_notes || "", "textarea", "data-only", "顯示在酒館角色卡的備註欄：給玩家的說明、使用方式、授權聲明等。不會進 AI 的 prompt。")}
     ${field("description", "角色描述", data.description, "textarea", "mirror", "角色定義主體。外貌只寫偏離 AI 預設的特徵，背景只放影響當前性格的事件。用行為展現個性，不用標籤。")}
@@ -1139,6 +1146,8 @@ function handleCardField(event) {
     getData()[key] = event.target.value;
     /* creator_notes 的 v1 頂層對應鍵是 creatorcomment，同步鏡射讓新舊酒館都讀得到 */
     if (key === "creator_notes" && state.card) state.card.creatorcomment = event.target.value;
+    /* character_version 頂層同名鍵同步鏡射（與打包工具輸出一致，新舊酒館都讀得到） */
+    if (key === "character_version" && state.card) state.card.character_version = event.target.value;
   } else {
     updateMirroredField(key, event.target.value);
   }

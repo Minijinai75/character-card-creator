@@ -1,6 +1,6 @@
 ﻿# Project Status
 
-本次更新時間：26-07-11 12:55
+本次更新時間：26-07-11 18:55
 
 ## Current Phase
 
@@ -88,6 +88,10 @@
 
 - **修大卡載入 stack overflow**（Mini 回報「大梁承恩录.json 一載入就炸」查案揪出）：問題卡 862KB、81 個 alternate greetings、90 個 worldbook entries。靜態分析＋Node.js VM 模擬全通過（250KB stack 都不炸），確認問題不在邏輯本身、出在瀏覽器 DOM 層；查案過程中發現 Mini 實測的是 GitHub Pages 部署版，先前本機改動沒推上去，之前幾次修復其實從沒生效過。根因：`estimateTokens()` 對 808K 字元字串逐字跑 `for...of`，手機 Chrome 爆呼叫堆疊。修三處（commit `e0d99aa`）：①`render()` 加 try-catch，stack overflow 時清 localStorage 暫存並提示 ②`latin1Decode` 從 `String.fromCharCode(...bytes)` 改分段 chunked，修已知的 spread 炸彈 ③`estimateTokens()` 超過 500K 字元跳過逐字計算改用近似值。加 debug console.log 到 `handleCardFile`／`loadFromStorage`／`init` 三處關鍵路徑、頁尾加 v2-debug 版本標記確認部署生效——**Mini 拍板兩者都留著不清**，方便日後出錯截 Console 給隊友看。
 - 修復驗證：已推上 GitHub Pages，Mini 實機驗證通過（Console 截圖 step 1-7 全過）
+
+## 26-07-11 18:55 新增
+
+- 角色卡編輯區新增「版本」欄（character_version）：Mini 回報看不到版本格子。綁 data.character_version、頂層同名鍵鏡射、匯入正規化 data 優先退頂層（無此鍵不添，保 roundtrip）。已 push 部署，待 Mini 部署版驗證。
 
 ## Next Step
 
