@@ -222,3 +222,14 @@
 
 ## 26-07-10 17:32（霽野窗）
 - feat：角色卡編輯區新增「創作者備註」欄（Mini 需求：酒館可編輯但工坊不行）——綁 data.creator_notes、同步頂層 creatorcomment；已 push 部署
+
+## 26-07-11 12:55（承曦窗，saver 補記）
+
+### 大卡載入 stack overflow 診斷＋修復
+- Mini 回報大梁承恩录.json（862KB、81 alternate greetings、90 worldbook entries）一載入就炸
+- 靜態分析＋Node.js VM 模擬全通過（250KB stack 都不炸），確認問題不在邏輯本身、出在瀏覽器 DOM 層
+- 查案中發現 Mini 實測的是 GitHub Pages 部署版，先前本機改動沒推上去，之前幾次修復其實從沒生效過
+- 根因：`estimateTokens()` 對 808K 字元字串逐字跑 `for...of`，手機 Chrome 爆呼叫堆疊
+- 修三處（commit `e0d99aa`）：`render()` 加 try-catch 含 localStorage 清除恢復／`latin1Decode` 從 spread 展開改分段 chunked／`estimateTokens()` 超過 500K 字元跳過逐字改近似值
+- 加 debug console.log 到 handleCardFile／loadFromStorage／init 三處關鍵路徑、頁尾加 v2-debug 版本標記
+- 已推上 GitHub Pages，Mini Console 截圖驗證 step 1-7 全過；Mini 拍板 debug log 與 v2-debug 標記都留著不清

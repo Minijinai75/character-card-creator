@@ -1,10 +1,10 @@
 ﻿# Project Status
 
-本次更新時間：26-07-10 16:13
+本次更新時間：26-07-11 12:55
 
 ## Current Phase
 
-**已部署上線**：https://minijinai75.github.io/character-card-creator/（GitHub Pages，main=master 分支自動部署）。ccv3 幽靈 bug 已修並部署（26-07-10 16:17 驗證上線）。本機 repo 已收編 GitHub 遠端歷史並設好 origin，之後改動走正常 commit→push 流程即可部署。
+**已部署上線**：https://minijinai75.github.io/character-card-creator/（GitHub Pages，main=master 分支自動部署）。ccv3 幽靈 bug 已修並部署（26-07-10 16:17 驗證上線）。大卡載入 stack overflow 已修並部署（26-07-11 commit `e0d99aa`，Mini Console 截圖驗證通過）。本機 repo 已收編 GitHub 遠端歷史並設好 origin，之後改動走正常 commit→push 流程即可部署。
 
 ## Completed
 
@@ -84,15 +84,21 @@
 - **修 ccv3 幽靈 bug**（Mini 回報「下載 PNG 無法匯入酒館」查案時揪出）：`insertCardIntoPng` 原本只清舊 `chara` 塊、不清 `ccv3`——SillyTavern 讀取時 ccv3 優先，封面若用「曾是角色卡的 PNG」會讓舊卡資料還魂（壞 ccv3 則直接匯入失敗）。修法：寫入端 chara/ccv3 都清都寫（與 ST 官方 write 行為一致）、讀取端 ccv3 優先（與 ST read 順序一致）
 - 修復驗證：工坊函式原碼抽進 node＋ST 官方解析器全鏈重現——舊卡圖封面/乾淨封面兩場景，產物均為 chara×1＋ccv3×1、ST 讀到新卡、工坊自重讀正確（證據見 VERIFY.md）
 
+## 26-07-11 12:55 新增
+
+- **修大卡載入 stack overflow**（Mini 回報「大梁承恩录.json 一載入就炸」查案揪出）：問題卡 862KB、81 個 alternate greetings、90 個 worldbook entries。靜態分析＋Node.js VM 模擬全通過（250KB stack 都不炸），確認問題不在邏輯本身、出在瀏覽器 DOM 層；查案過程中發現 Mini 實測的是 GitHub Pages 部署版，先前本機改動沒推上去，之前幾次修復其實從沒生效過。根因：`estimateTokens()` 對 808K 字元字串逐字跑 `for...of`，手機 Chrome 爆呼叫堆疊。修三處（commit `e0d99aa`）：①`render()` 加 try-catch，stack overflow 時清 localStorage 暫存並提示 ②`latin1Decode` 從 `String.fromCharCode(...bytes)` 改分段 chunked，修已知的 spread 炸彈 ③`estimateTokens()` 超過 500K 字元跳過逐字計算改用近似值。加 debug console.log 到 `handleCardFile`／`loadFromStorage`／`init` 三處關鍵路徑、頁尾加 v2-debug 版本標記確認部署生效——**Mini 拍板兩者都留著不清**，方便日後出錯截 Console 給隊友看。
+- 修復驗證：已推上 GitHub Pages，Mini 實機驗證通過（Console 截圖 step 1-7 全過）
+
 ## Next Step
 
 - ~~push origin master → GitHub Pages 自動部署 ccv3 修復~~（已完成，部署版驗證含修復）
-- Mini 用部署版重測：上傳 JSON＋封面圖→下載 PNG→匯入酒館（若仍失敗，把失敗的 PNG 給霽野驗屍塊結構）
+- Mini 用部署版重測：上傳 JSON＋封面圖→下載 PNG→匯入酒館（ccv3 修復尚待這輪完整流程驗證；大卡載入問題已另外修復並驗證，見上）
+- 建議下次拿大梁承恩录走完整流程（載入→檢查→匯出 JSON/PNG），確認除了載入以外其他功能也正常
 - 用手機實機測試
 
 ## Blockers
 
-- 無（真實卡片人工測試待 Mini 部署版重測，列於 Next Step）
+- 無
 
 ## Notes
 
