@@ -54,7 +54,7 @@ verification/       smoke test 截圖
 
 ## 限制
 
-此專案位於 Google Drive 同步資料夾。若需 install/build/test，先複製到 `C:\Users\Miyabi\dev\...`。
+此專案位於母基地本機碟（26-07-08 隨母基地搬遷落地；舊述「Google Drive 同步資料夾」已過時）。若需 install/build/test，仍建議複製到 `C:\Users\Miyabi\dev\...` 與資料區隔離。
 
 
 

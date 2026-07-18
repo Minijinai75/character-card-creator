@@ -106,7 +106,7 @@
 
 ## Notes
 
-- 原始碼在 Google Drive 同步路徑，靜態檔案無需 build
+- 原始碼在母基地本機路徑（26-07-08 隨搬遷落地，舊述 Google Drive 過時），靜態檔案無需 build
 - 獨立 repo：https://github.com/Minijinai75/character-card-creator
 - 也放在 ST-LESSON repo 的 tools/角色卡工坊/
 
