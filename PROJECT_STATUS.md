@@ -1,6 +1,6 @@
 ﻿# Project Status
 
-本次更新時間：26-07-11 18:55
+本次更新時間：26-07-21 15:29
 
 ## Current Phase
 
@@ -92,6 +92,10 @@
 ## 26-07-11 18:55 新增
 
 - 角色卡編輯區新增「版本」欄（character_version）：Mini 回報看不到版本格子。綁 data.character_version、頂層同名鍵鏡射、匯入正規化 data 優先退頂層（無此鍵不添，保 roundtrip）。已 push 部署，待 Mini 部署版驗證。
+
+## 26-07-18 21:34 新增
+
+- R09（commit `72e4a20`）：Notes 段的原始碼路徑描述更正——「原始碼在 Google Drive 同步路徑」改為「原始碼在母基地本機路徑（26-07-08 隨搬遷落地，舊述 Google Drive 過時）」。功能面無變動。
 
 ## Next Step
 
