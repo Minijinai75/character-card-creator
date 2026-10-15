@@ -1,6 +1,6 @@
 ﻿# Project Status
 
-本次更新時間：26-07-21 15:29
+本次更新時間：26-10-15 09:53
 
 ## Current Phase
 
@@ -86,7 +86,7 @@
 
 ## 26-07-11 12:55 新增
 
-- **修大卡載入 stack overflow**（Mini 回報「大梁承恩录.json 一載入就炸」查案揪出）：問題卡 862KB、81 個 alternate greetings、90 個 worldbook entries。靜態分析＋Node.js VM 模擬全通過（250KB stack 都不炸），確認問題不在邏輯本身、出在瀏覽器 DOM 層；查案過程中發現 Mini 實測的是 GitHub Pages 部署版，先前本機改動沒推上去，之前幾次修復其實從沒生效過。根因：`estimateTokens()` 對 808K 字元字串逐字跑 `for...of`，手機 Chrome 爆呼叫堆疊。修三處（commit `e0d99aa`）：①`render()` 加 try-catch，stack overflow 時清 localStorage 暫存並提示 ②`latin1Decode` 從 `String.fromCharCode(...bytes)` 改分段 chunked，修已知的 spread 炸彈 ③`estimateTokens()` 超過 500K 字元跳過逐字計算改用近似值。加 debug console.log 到 `handleCardFile`／`loadFromStorage`／`init` 三處關鍵路徑、頁尾加 v2-debug 版本標記確認部署生效——**Mini 拍板兩者都留著不清**，方便日後出錯截 Console 給隊友看。
+- **修大卡載入 stack overflow**（Mini 回報「大梁承恩录.json 一載入就炸」查案揪出）：問題卡 862KB、81 個 alternate greetings、90 個 worldbook entries。靜態分析＋Node.js VM 模擬全通過（250KB stack 都不炸），確認問題不在邏輯本身、出在瀏覽器 DOM 層；查案過程中發現 Mini 實測的是 GitHub Pages 部署版，先前本機改動沒推上去，之前幾次修復其實從沒生效過。根因：`estimateTokens()` 對 808K 字元字串逐字跑 `for...of`，手機 Chrome 爆呼叫堆疊。修三處（commit `e0d99aa`）：①`render()` 加 try-catch，stack overflow 時清 localStorage 暫存並提示 ②`latin1Decode` 從 `String.fromCharCode(...bytes)` 改分段 chunked，修已知的 spread 炸彈 ③`estimateTokens()` 超過 500K 字元跳過逐字計算改用近似值。加 debug console.log 到 `handleCardFile`／`loadFromStorage`／`init` 三處關鍵路徑、頁尾加 v2-debug 版本標記確認部署生效——**Mini 拍板兩者都留著不清**，方便日後出錯截 Console 給隊友看。→ 26-10-15 她在清帳頁改點「清」：15 行 `[DEBUG]`／`[init]` console.log 拔掉、頁尾改 `v2.1`；`render()` 與 `handleCardFile` 兩處 catch 的 `console.error` 留著，出錯仍截得到 Console。
 - 修復驗證：已推上 GitHub Pages，Mini 實機驗證通過（Console 截圖 step 1-7 全過）
 
 ## 26-07-11 18:55 新增

@@ -603,12 +603,9 @@ function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return false;
-    console.log("[DEBUG] loadFromStorage: raw length", raw.length);
     const save = JSON.parse(raw);
     if (!save.card && !save.worldbook) return false;
-    console.log("[DEBUG] loadFromStorage: normalizeCard...");
     if (save.card) state.card = normalizeCard(save.card);
-    console.log("[DEBUG] loadFromStorage: normalizeWorldBook...");
     if (save.worldbook) state.worldbook = normalizeWorldBook(save.worldbook);
     state.workflow = save.workflow || "";
     state.step = save.step || "guide";
@@ -1253,28 +1250,21 @@ async function handleCardFile(file) {
       if (state.card.data.character_book) state.worldbook = normalizeWorldBook(state.card.data.character_book);
       setMessage(`已從 PNG 讀取角色卡：${file.name}`);
     } else {
-      console.log("[DEBUG] step 1: parsing JSON...");
       const card = JSON.parse(await file.text());
-      console.log("[DEBUG] step 2: normalizeCard...");
       state.card = normalizeCard(card);
-      console.log("[DEBUG] step 3: resetAlternateGreetingDrafts...");
       resetAlternateGreetingDrafts(state.card);
       state.cardFileName = file.name;
       state.sourcePngBytes = null;
       state.sourcePngUrl = "";
       state.exportImageName = "";
-      console.log("[DEBUG] step 4: normalizeWorldBook...");
       if (state.card.data.character_book) state.worldbook = normalizeWorldBook(state.card.data.character_book);
-      console.log("[DEBUG] step 5: setMessage...");
       setMessage(`已載入角色卡 JSON：${file.name}`);
     }
     if (!state.workflow) state.workflow = "repair";
     state.step = "character";
-    console.log("[DEBUG] step 6: render...");
     render();
-    console.log("[DEBUG] step 7: done!");
   } catch (error) {
-    console.error("[DEBUG] CRASH:", error.message, error.stack);
+    console.error("[handleCardFile] crash:", error.message, error.stack);
     setMessage(`角色卡載入失敗：${error.message}`, "error");
   }
 }
@@ -1769,7 +1759,6 @@ function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 function init() {
-  console.log("[init] app.js v2-debug loaded");
   const controls = $("#fileControlsTemplate").content.cloneNode(true);
   document.body.appendChild(controls);
   $$(".step-link").forEach((button) => button.addEventListener("click", () => {
@@ -1796,14 +1785,9 @@ function init() {
     event.target.value = "";
   });
   if (loadFromStorage()) {
-    console.log("[DEBUG] init: loadFromStorage OK, step:", state.step);
     setMessage("已自動恢復上次的編輯內容。封面圖片需要重新上傳。");
-  } else {
-    console.log("[DEBUG] init: no saved data");
   }
-  console.log("[DEBUG] init: calling render...");
   render();
-  console.log("[DEBUG] init: render done");
   window.addEventListener("beforeunload", (e) => {
     if (state.card || state.worldbook) {
       saveToStorage();
